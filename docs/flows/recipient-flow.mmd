@@ -1,0 +1,152 @@
+# Bridgelet - Recipient User Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Entry Points
+    START([START]) --> ENTRY{Entry Point}
+    ENTRY -->|SMS Link| SMS_OPEN[Open SMS Link]
+    ENTRY -->|Email Link| EMAIL_OPEN[Open Email Link]
+    ENTRY -->|WhatsApp| WA_OPEN[Open WhatsApp Link]
+    ENTRY -->|QR Code Scan| QR_OPEN[Scan QR Code]
+    ENTRY -->|Direct URL| DIRECT_OPEN[Enter Claim URL]
+    
+    SMS_OPEN --> EXTRACT_TOKEN
+    EMAIL_OPEN --> EXTRACT_TOKEN
+    WA_OPEN --> EXTRACT_TOKEN
+    QR_OPEN --> EXTRACT_TOKEN
+    DIRECT_OPEN --> EXTRACT_TOKEN[Extract Token from URL<br/>https://claim.bridgelet.io/c/{token}]
+    
+    %% Token Verification
+    subgraph VERIFICATION [Claim Verification]
+        EXTRACT_TOKEN --> CHECK_TOKEN{Token Extracted?}
+        CHECK_TOKEN -->|No| INVALID_URL[Show Invalid URL Error]
+        INVALID_URL --> END_INVALID([END - Invalid Link])
+        
+        CHECK_TOKEN -->|Yes| VERIFY_BACKEND[Verify with Backend<br/>POST /api/claims/verify]
+        VERIFY_BACKEND --> TOKEN_STATUS{Token Status?}
+    end
+    
+    %% Token Error States
+    TOKEN_STATUS -->|Invalid| ERROR_INVALID[Error: Invalid Token]
+    TOKEN_STATUS -->|Expired| ERROR_EXPIRED[Error: Link Expired]
+    TOKEN_STATUS -->|Already Claimed| ERROR_CLAIMED[Error: Already Claimed]
+    TOKEN_STATUS -->|Account Not Found| ERROR_NOT_FOUND[Error: Claim Not Found]
+    
+    ERROR_INVALID --> CONTACT_SENDER[Contact Sender for New Link]
+    ERROR_EXPIRED --> CONTACT_SENDER
+    ERROR_CLAIMED --> VIEW_TX[View Transaction on Explorer]
+    ERROR_NOT_FOUND --> CONTACT_SENDER
+    
+    CONTACT_SENDER --> END_ERROR([END - Error])
+    VIEW_TX --> END_ERROR
+    
+    %% Valid Token Flow
+    TOKEN_STATUS -->|Valid| SHOW_CLAIM[Display Claim Landing Page]
+    
+    subgraph CLAIM_DISPLAY [Claim Details Display]
+        SHOW_CLAIM --> SHOW_HEADER[Header: You've Received Crypto!]
+        SHOW_HEADER --> SHOW_SENDER[Show Sender Name<br/>From: Alice]
+        SHOW_HEADER --> SHOW_MESSAGE[Show Message<br/>Happy Birthday!]
+        SHOW_HEADER --> SHOW_AMOUNT[Show Amount<br/>50 USDC ≈ $50.00]
+        SHOW_HEADER --> SHOW_EXPIRY[Show Expiry Date<br/>Expires: March 15, 2026]
+        
+        SHOW_SENDER --> CLAIM_CTA
+        SHOW_MESSAGE --> CLAIM_CTA
+        SHOW_AMOUNT --> CLAIM_CTA
+        SHOW_EXPIRY --> CLAIM_CTA[CTA: Claim Your Funds]
+    end
+    
+    CLAIM_CTA --> CHECK_WALLET{Have Wallet?}
+    
+    %% No Wallet Path
+    CHECK_WALLET -->|No| WALLET_HELP[Show Wallet Help]
+    WALLET_HELP --> WALLET_OPTIONS{Select Platform}
+    WALLET_OPTIONS -->|Mobile| MOBILE_WALLET[LOBSTR App]
+    WALLET_OPTIONS -->|Desktop| DESKTOP_WALLET[Freighter Extension]
+    
+    MOBILE_WALLET --> REDIRECT_STORE[Redirect to App Store]
+    DESKTOP_WALLET --> REDIRECT_INSTALL[Redirect to Install Page]
+    
+    REDIRECT_STORE --> WALLET_CREATED{Wallet Created?}
+    REDIRECT_INSTALL --> WALLET_CREATED
+    
+    WALLET_CREATED -->|No| END_NO_WALLET([END - No Wallet])
+    WALLET_CREATED -->|Yes| ENTER_ADDRESS
+    
+    %% Wallet Entry
+    CHECK_WALLET -->|Yes| ENTER_ADDRESS[Enter Wallet Address]
+    
+    subgraph ADDRESS_ENTRY [Wallet Address Input]
+        ENTER_ADDRESS --> INPUT_FIELD[Input Field:<br/>Enter Stellar Address (starts with G)]
+        INPUT_FIELD --> REALTIME_VALIDATE[Real-time Validation]
+        REALTIME_VALIDATE --> ADDR_VALID{Address Valid?}
+        
+        ADDR_VALID -->|No| SHOW_ADDR_ERROR[Show Error:<br/>- Must start with G<br/>- Must be 56 characters]
+        SHOW_ADDR_ERROR --> INPUT_FIELD
+        
+        ADDR_VALID -->|Yes| SHOW_CHECKMARK[Show Green Checkmark]
+        SHOW_CHECKMARK --> PREV_ADDR{Previous Address?}
+        PREV_ADDR -->|Yes| SUGGEST_PREV[Suggest Previous Address]
+        SUGGEST_PREV --> USE_PREV{Use Previous?}
+        USE_PREV -->|Yes| AUTO_FILL[Auto-fill Address]
+        USE_PREV -->|No| CONTINUE_ADDR
+        PREV_ADDR -->|No| CONTINUE_ADDR
+        AUTO_FILL --> CONTINUE_ADDR[Continue Button]
+    end
+    
+    CONTINUE_ADDR --> CONFIRM_CLAIM[Confirm Claim Screen]
+    
+    %% Confirmation
+    subgraph CONFIRMATION [Claim Confirmation]
+        CONFIRM_CLAIM --> REVIEW_DETAILS[Review Details:<br/>- Amount: 50 USDC<br/>- To: GD5J6H...4XR<br/>- Warning: Cannot be reversed]
+        REVIEW_DETAILS --> CONFIRM_CTA{Confirm?}
+        CONFIRM_CTA -->|No| BACK_TO_ADDR[Back to Address Entry]
+        BACK_TO_ADDR --> ENTER_ADDRESS
+    end
+    
+    CONFIRM_CTA -->|Yes| PROCESSING[Processing Claim]
+    
+    %% Processing
+    subgraph PROCESSING_CLAIM [Sweep Execution]
+        PROCESSING --> VERIFY_TOKEN[Verify Token]
+        VERIFY_TOKEN --> AUTH_TRANSFER[Authorize Transfer]
+        AUTH_TRANSFER --> EXECUTE_SWEEP[Execute Sweep<br/>~5-10 seconds]
+        EXECUTE_SWEEP --> SWEEP_STATUS{Sweep Success?}
+        
+        SWEEP_STATUS -->|No| SWEEP_ERROR[Show Sweep Error]
+        SWEEP_ERROR --> CHECK_STATUS{Check Status}
+        CHECK_STATUS -->|Unclaimed| RETRY_SWEEP{Retry?}
+        RETRY_SWEEP -->|Yes| PROCESSING
+        RETRY_SWEEP -->|No| END_FAILED([END - Failed])
+        CHECK_STATUS -->|Claimed| SHOW_ALREADY_CLAIMED[Show Already Claimed]
+        SHOW_ALREADY_CLAIMED --> END_FAILED
+    end
+    
+    SWEEP_STATUS -->|Yes| SUCCESS[Claim Success]
+    
+    %% Success
+    subgraph SUCCESS_SECTION [Success Screen]
+        SUCCESS --> SUCCESS_MSG[Success Message:<br/>You've received 50 USDC!]
+        SUCCESS_MSG --> TX_DETAILS[Transaction Details:<br/>- Amount<br/>- Destination Address<br/>- Transaction Hash]
+        TX_DETAILS --> VIEW_EXPLORER[View on Stellar Explorer]
+        
+        VIEW_EXPLORER --> NEXT_STEPS{Next Steps?}
+        NEXT_STEPS -->|Check Balance| OPEN_VIEWER[Open Stellar Account Viewer]
+        NEXT_STEPS -->|Send Crypto| CREATE_ACCOUNT[Create Bridgelet Account]
+        NEXT_STEPS -->|Done| DONE_BTN[Done]
+        
+        OPEN_VIEWER --> END_SUCCESS
+        CREATE_ACCOUNT --> END_SUCCESS
+        DONE_BTN --> END_SUCCESS([END - Success])
+    end
+    
+    %% Mobile Considerations Note
+    subgraph MOBILE_NOTE [Mobile-First Design]
+        direction LR
+        NOTE1[Large tap targets<br/>min 44x44px]
+        NOTE2[Single column layout]
+        NOTE3[Minimal scrolling]
+        NOTE4[Keyboard-friendly]
+        NOTE5[iOS Safari &<br/>Chrome Android]
+    end
+```

@@ -1,5 +1,7 @@
 # Bridgelet
 
+[![Frontend CI](https://github.com/bridgelet-org/bridgelet/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/bridgelet-org/bridgelet/actions/workflows/frontend-ci.yml)
+
 **Ephemeral accounts for onboarding non-crypto users into Stellar**
 
 ## Overview
@@ -24,35 +26,83 @@ Bridgelet is designed as infrastructure, not an end-user wallet or disbursement 
 
 ## Architecture
 
-- **[bridgelet-core](https://github.com/bridgelet-org/bridgelet-core):** Soroban smart contracts for on-chain account restrictions and sweep logic
-- **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk):** NestJS backend SDK for account lifecycle management and claim authentication
-- **[bridgelet-ui](https://github.com/bridgelet-org/bridgelet-frontend):** (Future) Next.js reference implementation for claim flows
+* **[bridgelet-core](https://github.com/bridgelet-org/bridgelet-core)**: Soroban smart contracts for on-chain restrictions
+* **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk)**: Backend SDK and API (NestJS + TypeScript)
+* **bridgelet-ui**: Reference UI demonstrating SDK integration (Next.js 16+, TypeScript, Tailwind CSS)
+  └─ Located in `frontend/` within this repository
 
-## Documentation
+## Repository Structure
 
-Comprehensive documentation is available in `/docs`:
+This is a monorepo containing both the docs and frontend reference implementation:
 
-- [📘 Architecture Overview](./docs/architecture.pdf)
-- [🔒 Security Model](./docs/security-model.pdf)
-- [🚀 Getting Started Guide](./docs/getting-started.pdf)
-- [🔧 Integration Guide](./docs/integration-guide.pdf)
-- [📊 Use Cases & Examples](./docs/use-cases.pdf)
+```text
+bridgelet/
+├── frontend/         # Next.js Reference UI
+│   ├── app/          # App router pages (/, /send, /claim/[token])
+│   ├── components/   # Reusable UI components
+│   ├── lib/          # Utilities and SDK wrappers
+│   └── ...
+└── docs/             # Technical specifications and guides
+```
 
-This documentation is still a work in progress and will constantly change as the project progresses. If pdf file is not visible on github, clone the repo to view full documentation
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`/docs`](./docs) directory:
+
+| Document                                                                                               | Description                                      |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| [📐 Architecture Overview](https://github.com/bridgelet-org/bridgelet/raw/main/docs/architecture.pdf)  | System design and component interactions         |
+| [🔒 Security Model](https://github.com/bridgelet-org/bridgelet/raw/main/docs/security-model.pdf)       | Security considerations and threat model         |
+| [🚀 Getting Started](https://github.com/bridgelet-org/bridgelet/raw/main/docs/getting-started.pdf)     | Quick start guide for developers                 |
+| [🔧 Integration Guide](https://github.com/bridgelet-org/bridgelet/raw/main/docs/integration-guide.pdf) | Step-by-step integration instructions            |
+| [💡 Use Cases & Examples](https://github.com/bridgelet-org/bridgelet/raw/main/docs/use-cases.pdf)      | Real-world use cases and examples                |
+| [📋 MVP Specification](https://github.com/bridgelet-org/bridgelet/raw/main/docs/mvp-specification.pdf) | Minimum viable product requirements              |
+| [🧪 Testing Guide](./TESTING.md)                                                                       | Testing strategy, guidelines, and best practices |
+
+> **📌 Note:** If PDFs don't render in your browser, click the links above to download them directly, or see the [docs directory](./docs) for more information.
+
+This documentation is actively maintained and will evolve as the project progresses.
 
 ## Quick Start
-```bash
-# Clone repositories
-git clone https://github.com/bridgelet-org/bridgelet-sdk.git
-git clone https://github.com/bridgelet-org/bridgelet-core.git
 
-# See individual repo READMEs for setup instructions
+### Frontend Setup
+
+The reference UI is built with **Next.js 16+**, **TypeScript 5+** (Strict Mode), and **Tailwind CSS**.
+
+To run the frontend locally:
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Set up environment variables
+cp .env.example .env.local
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
 ```
+
+The application will be available at `http://localhost:3000`. 
+
+#### Core Pages:
+- `/` — Homepage & Explainer
+- `/send` — Sender Flow (Create ephemeral account)
+- `/claim/[token]` — Recipient Flow (Direct claim redemption)
+
+### SDK & Core Setup
+
+For backend or smart contract development, please refer to the specific repositories:
+- [bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk) setup instructions
+- [bridgelet-core](https://github.com/bridgelet-org/bridgelet-core) setup instructions
 
 ## Repositories
 
-- **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk.git)** - Backend SDK (NestJS + TypeScript)
-- **[bridgelet-core](https://github.com/bridgelet-org/bridgelet-core.git)** - Smart contracts (Soroban + Rust)
+- **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk)** - Backend SDK (NestJS + TypeScript)
+- **[bridgelet-core](https://github.com/bridgelet-org/bridgelet-core)** - Smart contracts (Soroban + Rust)
+- **bridgelet** - Reference UI implementation and documentation (This repository)
 
 ## MVP Scope (v0.1)
 
@@ -62,32 +112,44 @@ git clone https://github.com/bridgelet-org/bridgelet-core.git
 - Auto-sweep on claim
 - Expire unclaimed accounts after time window
 
-See [MVP Specification](./docs/mvp-specification.pdf) for details.
+See [MVP Specification](https://github.com/bridgelet-org/bridgelet/raw/main/docs/mvp-specification.pdf) for complete details.
 
 ## Status
 
 🚧 **Early Development** - Building core primitives
 
-Current phase: MVP implementation (Q1 2026)
+**Current phase:** MVP implementation (Q1 2026)
+
+See our [Public Roadmap](./ROADMAP.md) for future plans and milestones.
+
+## Security
+
+Security is critical for financial infrastructure. If you discover a vulnerability, please review our [Security Policy](./SECURITY.md) for responsible disclosure guidelines.
+
+**Security Contact:** aminubabafatima8@gmail.com
 
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
+Please also review our [Code of Conduct](./CODE_OF_CONDUCT.md) and [Support Guide](./SUPPORT.md) before engaging.
+
 Areas of interest:
+
 - Soroban smart contract development
 - Financial infrastructure for emerging markets
 - Developer experience and SDK design
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT License - see [LICENSE](./LICENSE)
 
 ## Contact
 
-- Issues: [GitHub Issues](https://bridgelet-org/bridgelet/issues)
-- Discussions: [GitHub Discussions](https://github.com/bridgelet-org/bridgelet/discussions)
-<!-- - Stellar Discord: [#bridgelet](https://discord.gg/stellardev) -->
+- **Issues:** [GitHub Issues](https://github.com/bridgelet-org/bridgelet/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/bridgelet-org/bridgelet/discussions)
+- - Support Overview: [SUPPORT.md](./SUPPORT.md)
+  <!-- - Stellar Discord: [#bridgelet](https://discord.gg/stellardev) -->
 
 ---
 

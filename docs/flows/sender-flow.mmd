@@ -1,0 +1,147 @@
+# Bridgelet - Sender User Flow Diagram
+
+```mermaid
+flowchart TD
+    %% Entry Points
+    START([START]) --> ENTRY{Entry Point}
+    ENTRY -->|Homepage| HP[Homepage<br/>bridgelet.io]
+    ENTRY -->|Direct Link| CL[Create Claim Link]
+    ENTRY -->|Widget| WIDGET[Integrated App Widget]
+    
+    %% Homepage Flow
+    HP --> SEND_FUNDS{Click Send Funds?}
+    SEND_FUNDS -->|No| HOW_IT_WORKS[Show How It Works]
+    HOW_IT_WORKS --> SEND_FUNDS
+    SEND_FUNDS -->|Yes| CHECK_WALLET{Wallet Connected?}
+    
+    CL --> CHECK_WALLET
+    WIDGET --> CHECK_WALLET
+    
+    %% Wallet Connection
+    CHECK_WALLET -->|No| WALLET_MODAL[Show Wallet Selection Modal]
+    WALLET_MODAL --> WALLET_TYPE{Select Wallet}
+    WALLET_TYPE -->|Freighter| CONNECT_F[Connect Freighter]
+    WALLET_TYPE -->|Mobile| CONNECT_WC[Connect WalletConnect]
+    WALLET_TYPE -->|Albedo| CONNECT_A[Connect Albedo]
+    
+    CONNECT_F --> WALLET_SUCCESS{Connection Success?}
+    CONNECT_WC --> WALLET_SUCCESS
+    CONNECT_A --> WALLET_SUCCESS
+    
+    WALLET_SUCCESS -->|No| WALLET_ERROR[Show Connection Error]
+    WALLET_ERROR --> WALLET_MODAL
+    
+    WALLET_SUCCESS -->|Yes| AUTH[Authenticate with Backend]
+    AUTH --> AUTH_SUCCESS{Auth Success?}
+    AUTH_SUCCESS -->|No| AUTH_ERROR[Show Auth Error]
+    AUTH_ERROR --> WALLET_MODAL
+    AUTH_SUCCESS -->|Yes| CREATE_FORM
+    
+    CHECK_WALLET -->|Yes| CREATE_FORM[Create Claim Form]
+    
+    %% Create Claim Form
+    subgraph FORM_SECTION [Create Claim Form]
+        CREATE_FORM --> INPUT_AMOUNT[Enter Amount]
+        INPUT_AMOUNT --> SELECT_ASSET[Select Asset<br/>XLM/USDC/etc]
+        SELECT_ASSET --> INPUT_NAME[Recipient Name<br/>(Optional)]
+        INPUT_NAME --> INPUT_MESSAGE[Message<br/>(Optional)]
+        INPUT_MESSAGE --> SET_EXPIRY[Set Expiration<br/>24h/7d/30d/90d]
+        SET_EXPIRY --> VALIDATE_FORM{Form Valid?}
+    end
+    
+    VALIDATE_FORM -->|No| SHOW_ERRORS[Show Validation Errors]
+    SHOW_ERRORS --> CREATE_FORM
+    
+    VALIDATE_FORM -->|Yes| COST_BREAKDOWN[Show Cost Breakdown<br/>Amount + Network Fee]
+    COST_BREAKDOWN --> CONTINUE{Click Continue?}
+    CONTINUE -->|No| CREATE_FORM
+    CONTINUE -->|Yes| CONFIRM_SCREEN[Confirm Payment Screen]
+    
+    %% Confirmation
+    subgraph CONFIRM_SECTION [Confirm Payment]
+        CONFIRM_SCREEN --> REVIEW[Review Summary<br/>Amount, Recipient, Expiry]
+        REVIEW --> WALLET_STATUS{Wallet Still Connected?}
+        WALLET_STATUS -->|No| RECONNECT[Reconnect Wallet]
+        RECONNECT --> CONFIRM_SCREEN
+        WALLET_STATUS -->|Yes| SIGN_TX{Sign Transaction?}
+        SIGN_TX -->|No| BACK_TO_FORM[Back to Form]
+        BACK_TO_FORM --> CREATE_FORM
+    end
+    
+    SIGN_TX -->|Yes| PROCESSING[Processing Transaction]
+    
+    %% Processing
+    subgraph PROCESSING_SECTION [Blockchain Processing]
+        PROCESSING --> GENERATE_EPHEMERAL[Generate Ephemeral Account]
+        GENERATE_EPHEMERAL --> CREATE_JWT[Create JWT Claim Token]
+        CREATE_JWT --> SUBMIT_TX[Submit to Stellar Network]
+        SUBMIT_TX --> WAIT_CONFIRM[Wait for Confirmation<br/>~5 seconds]
+        WAIT_CONFIRM --> TX_SUCCESS{Transaction Success?}
+    end
+    
+    TX_SUCCESS -->|No| TX_ERROR[Show Transaction Error]
+    TX_ERROR --> RETRY_TX{Retry?}
+    RETRY_TX -->|Yes| PROCESSING
+    RETRY_TX -->|No| CANCEL_TX[Cancel Payment]
+    CANCEL_TX --> CREATE_FORM
+    
+    TX_SUCCESS -->|Yes| SUCCESS_SCREEN[Payment Success Screen]
+    
+    %% Success
+    subgraph SUCCESS_SECTION [Success & Sharing]
+        SUCCESS_SCREEN --> SHOW_LINK[Display Claim Link<br/>https://claim.bridgelet.io/c/xxx]
+        SHOW_LINK --> SHOW_QR[Display QR Code]
+        SHOW_QR --> SHARE_OPTIONS[Share Options]
+        SHARE_OPTIONS --> COPY[Copy Link]
+        SHARE_OPTIONS --> SMS[Share via SMS]
+        SHARE_OPTIONS --> EMAIL[Share via Email]
+        SHARE_OPTIONS --> WHATSAPP[Share via WhatsApp]
+    end
+    
+    COPY --> NEXT_ACTION
+    SMS --> NEXT_ACTION
+    EMAIL --> NEXT_ACTION
+    WHATSAPP --> NEXT_ACTION
+    
+    NEXT_ACTION{Next Action?}
+    NEXT_ACTION -->|Track Status| DASHBOARD[Sender Dashboard]
+    NEXT_ACTION -->|Send Another| CREATE_FORM
+    NEXT_ACTION -->|Done| END_SUCCESS([END - Success])
+    
+    %% Dashboard
+    subgraph DASHBOARD_SECTION [Sender Dashboard]
+        DASHBOARD --> LIST_CLAIMS[List All Sent Claims]
+        LIST_CLAIMS --> FILTER{Filter By}
+        FILTER -->|All| SHOW_ALL[Show All]
+        FILTER -->|Unclaimed| SHOW_UNCLAIMED[Show Unclaimed]
+        FILTER -->|Claimed| SHOW_CLAIMED[Show Claimed]
+        FILTER -->|Expired| SHOW_EXPIRED[Show Expired]
+        
+        SHOW_ALL --> SELECT_CLAIM{Select Claim}
+        SHOW_UNCLAIMED --> SELECT_CLAIM
+        SHOW_CLAIMED --> SELECT_CLAIM
+        SHOW_EXPIRED --> SELECT_CLAIM
+        
+        SELECT_CLAIM --> VIEW_DETAILS[View Claim Details]
+        VIEW_DETAILS --> CLAIM_STATUS{Claim Status?}
+        
+        CLAIM_STATUS -->|Unclaimed| SHOW_UNCLAIMED_ACTIONS[Actions:<br/>- Cancel<br/>- Wait for Claim]
+        CLAIM_STATUS -->|Expired| SHOW_EXPIRED_ACTIONS[Actions:<br/>- Reclaim Funds]
+        CLAIM_STATUS -->|Claimed| SHOW_CLAIMED_INFO[Show Claim Info<br/>- Claimed Date<br/>- Transaction Hash]
+        
+        SHOW_UNCLAIMED_ACTIONS --> CANCEL_CLAIM{Cancel?}
+        CANCEL_CLAIM -->|Yes| PROCESS_CANCEL[Process Cancel]
+        PROCESS_CANCEL --> REFUND[Refund to Sender]
+        REFUND --> DASHBOARD
+        CANCEL_CLAIM -->|No| DASHBOARD
+        
+        SHOW_EXPIRED_ACTIONS --> RECLAIM{Reclaim?}
+        RECLAIM -->|Yes| PROCESS_RECLAIM[Process Reclaim]
+        PROCESS_RECLAIM --> REFUND
+        RECLAIM -->|No| DASHBOARD
+        
+        SHOW_CLAIMED_INFO --> DASHBOARD
+    end
+    
+    DASHBOARD --> END_DASHBOARD([END - Dashboard])
+```
