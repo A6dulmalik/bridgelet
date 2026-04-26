@@ -1,13 +1,8 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
-import { Redirect, useRouter } from "expo-router";
-import { secureStorage } from "./src/utils/storage";
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Redirect } from 'expo-router';
+import { secureStorage } from './src/utils/storage';
+import { SenderFlow } from './src/sender/SenderFlow';
 
 export default function HomeIndex() {
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
@@ -35,22 +30,7 @@ export default function HomeIndex() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bridgelet Main App</Text>
-      <Text style={styles.subtitle}>Choose a flow to test:</Text>
-
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={() => router.push("/claim")}
-      >
-        <Text style={styles.primaryButtonText}>Claim Token Entry</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={() => router.push("/security")}
-      >
-        <Text style={styles.secondaryButtonText}>Biometric + PIN Security</Text>
-      </TouchableOpacity>
+      <SenderFlow />
     </View>
   );
 }
