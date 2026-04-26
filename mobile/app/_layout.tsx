@@ -1,15 +1,21 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
+import { ThemeProvider, useTheme } from "./src/providers/ThemeProvider";
+import { useDeepLinking } from "./src/linking/useDeepLinking";
 
-export default function RootLayout() {
+function AppNavigator() {
+  const { colors, isDark } = useTheme();
+  useDeepLinking();
+
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0F172A" },
+          contentStyle: { backgroundColor: colors.background },
         }}
       >
         <Stack.Screen name="(onboarding)" options={{ animation: "fade" }} />
@@ -23,6 +29,18 @@ export default function RootLayout() {
           options={{ animation: "slide_from_right" }}
         />
       </Stack>
-    </SafeAreaProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppNavigator />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
