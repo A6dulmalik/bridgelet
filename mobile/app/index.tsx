@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { secureStorage } from './src/utils/storage';
+import { SenderFlow } from './src/sender/SenderFlow';
 
 export default function HomeIndex() {
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
@@ -28,8 +29,7 @@ export default function HomeIndex() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bridgelet Main App</Text>
-      <Text style={styles.subtitle}>Setting up ephemeral accounts...</Text>
+      <SenderFlow />
     </View>
   );
 }
