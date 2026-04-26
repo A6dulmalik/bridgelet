@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
 /**
  * Storage interface for consistent usage across the app.
@@ -15,11 +15,13 @@ export interface IStorage {
  * This can be expanded as new sensitive data is added to the app.
  */
 export const SENSITIVE_KEYS = [
-  'auth_token',
-  'session_data',
-  'temp_identifier',
-  'user_profile',
-  'private_key_hint',
+  "auth_token",
+  "session_data",
+  "temp_identifier",
+  "user_profile",
+  "private_key_hint",
+  "biometric_enabled",
+  "pin_code",
 ];
 
 /**
@@ -63,9 +65,11 @@ class SecureStorageImpl implements IStorage {
     try {
       const promises = SENSITIVE_KEYS.map((key) => this.removeItem(key));
       await Promise.all(promises);
-      console.log('[SecureStorage] Successfully cleared all known sensitive keys.');
+      console.log(
+        "[SecureStorage] Successfully cleared all known sensitive keys.",
+      );
     } catch (error) {
-      console.error('[SecureStorage] Error during cleanup:', error);
+      console.error("[SecureStorage] Error during cleanup:", error);
       throw error;
     }
   }
