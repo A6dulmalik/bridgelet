@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { lookupClaimByToken, ClaimLookupResult } from "../src/claims/service";
 import {
@@ -25,7 +26,17 @@ const summarizeToken = (token: string): string => {
   return `${token.slice(0, 18)}...${token.slice(-12)}`;
 };
 
+const createMockTxHash = (seed: string): string => {
+  const hex = Array.from(seed)
+    .map((char) => char.charCodeAt(0).toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 64);
+
+  return (hex + "0".repeat(64)).slice(0, 64);
+};
+
 export default function ClaimTokenEntryScreen() {
+  const router = useRouter();
   const [tokenInput, setTokenInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -135,6 +146,27 @@ export default function ClaimTokenEntryScreen() {
             <Text selectable style={styles.tokenPreview}>
               {summarizeToken(normalizedToken)}
             </Text>
+
+            <TouchableOpacity
+              style={styles.claimButton}
+              onPress={() => {
+                const txHash = createMockTxHash(
+                  `${result.accountId}:${normalizedToken}`,
+                );
+
+                router.push({
+                  pathname: "/claim/success",
+                  params: {
+                    amount: result.amount,
+                    asset: result.asset,
+                    accountId: result.accountId,
+                    txHash,
+                  },
+                });
+              }}
+            >
+              <Text style={styles.claimButtonText}>Complete Claim</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -243,5 +275,17 @@ const styles = StyleSheet.create({
   tokenPreview: {
     color: "#E2E8F0",
     fontFamily: "Courier",
+  },
+  claimButton: {
+    marginTop: 12,
+    borderRadius: 10,
+    backgroundColor: "#16A34A",
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  claimButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
