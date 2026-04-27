@@ -12,25 +12,19 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useThemeColors } from '../src/hooks/useThemeColors';
 
-const readParam = (value: string | string[] | undefined, fallback = ''): string => {
-  if (Array.isArray(value)) {
-    return value[0] ?? fallback;
-  }
-
-  return value ?? fallback;
-};
+const readParam = (value: string | string[] | undefined, fallback = ''): string =>
+  Array.isArray(value) ? (value[0] ?? fallback) : (value ?? fallback);
 
 const summarizeMiddle = (value: string): string => {
-  if (value.length <= 24) {
-    return value;
-  }
-
+  if (value.length <= 24) return value;
   return `${value.slice(0, 12)}...${value.slice(-10)}`;
 };
 
 export default function ClaimSuccessScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { amount, asset, accountId, txHash } = useLocalSearchParams();
 
   const parsedAmount = readParam(amount, '0');
@@ -43,24 +37,12 @@ export default function ClaimSuccessScreen() {
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1.08,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
+        Animated.timing(pulse, { toValue: 1.08, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]),
     );
-
     animation.start();
-
-    return () => {
-      animation.stop();
-    };
+    return () => animation.stop();
   }, [pulse]);
 
   const explorerUrl = parsedTxHash
@@ -68,16 +50,9 @@ export default function ClaimSuccessScreen() {
     : '';
 
   const handleOpenExplorer = async () => {
-    if (!explorerUrl) {
-      return;
-    }
-
+    if (!explorerUrl) return;
     const canOpen = await Linking.canOpenURL(explorerUrl);
-    if (!canOpen) {
-      Alert.alert('Unable to open explorer link right now.');
-      return;
-    }
-
+    if (!canOpen) { Alert.alert('Unable to open explorer link right now.'); return; }
     await Linking.openURL(explorerUrl);
   };
 
@@ -88,59 +63,54 @@ export default function ClaimSuccessScreen() {
       `Account: ${parsedAccountId}`,
       parsedTxHash ? `Transaction: ${parsedTxHash}` : '',
       explorerUrl,
-    ]
-      .filter(Boolean)
-      .join('\n');
-
+    ].filter(Boolean).join('\n');
     await Share.share({ message });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Animated.View style={[styles.iconWrap, { transform: [{ scale: pulse }] }]}> 
-          <Text style={styles.icon}>✓</Text>
+        <Animated.View style={[styles.iconWrap, { transform: [{ scale: pulse }], backgroundColor: colors.successBg, borderColor: colors.successBorder }]}>
+          <Text style={[styles.icon, { color: colors.successText }]}>✓</Text>
         </Animated.View>
 
-        <Text style={styles.title}>Claim Successful</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.text }]}>Claim Successful</Text>
+        <Text style={[styles.subtitle, { color: colors.subtext }]}>
           Your transfer has been claimed and recorded successfully.
         </Text>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.cardTitle}>Transaction Summary</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.label}>Amount</Text>
-            <Text style={styles.value}>{parsedAmount}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.label}>Asset</Text>
-            <Text style={styles.value}>{parsedAsset}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.label}>Account</Text>
-            <Text style={styles.value}>{summarizeMiddle(parsedAccountId)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.label}>Tx Hash</Text>
-            <Text style={styles.value}>{summarizeMiddle(parsedTxHash || 'pending')}</Text>
-          </View>
+        <View style={[styles.summaryCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Transaction Summary</Text>
+          {[
+            { label: 'Amount', value: parsedAmount },
+            { label: 'Asset', value: parsedAsset },
+            { label: 'Account', value: summarizeMiddle(parsedAccountId) },
+            { label: 'Tx Hash', value: summarizeMiddle(parsedTxHash || 'pending') },
+          ].map(({ label, value }) => (
+            <View key={label} style={styles.summaryRow}>
+              <Text style={[styles.label, { color: colors.subtext }]}>{label}</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+            </View>
+          ))}
         </View>
 
         <TouchableOpacity
-          style={[styles.secondaryButton, !explorerUrl && styles.disabledButton]}
+          style={[styles.secondaryButton, { borderColor: colors.border, backgroundColor: colors.surface }, !explorerUrl && styles.disabledButton]}
           onPress={handleOpenExplorer}
           disabled={!explorerUrl}
         >
-          <Text style={styles.secondaryText}>Open in Stellar Explorer</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.secondaryButton} onPress={handleShare}>
-          <Text style={styles.secondaryText}>Share Receipt</Text>
+          <Text style={[styles.secondaryText, { color: colors.text }]}>Open in Stellar Explorer</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.secondaryButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          onPress={handleShare}
+        >
+          <Text style={[styles.secondaryText, { color: colors.text }]}>Share Receipt</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           onPress={() => router.replace('/send')}
         >
           <Text style={styles.primaryText}>Done</Text>
@@ -151,103 +121,24 @@ export default function ClaimSuccessScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-  },
-  content: {
-    padding: 20,
-    alignItems: 'stretch',
-    gap: 12,
-  },
+  container: { flex: 1 },
+  content: { padding: 20, alignItems: 'stretch', gap: 12 },
   iconWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#166534',
-    borderWidth: 1,
-    borderColor: '#22C55E',
-    marginTop: 8,
+    width: 88, height: 88, borderRadius: 44,
+    alignSelf: 'center', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, marginTop: 8,
   },
-  icon: {
-    color: '#DCFCE7',
-    fontSize: 42,
-    fontWeight: '700',
-    lineHeight: 44,
-  },
-  title: {
-    textAlign: 'center',
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: '#94A3B8',
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  summaryCard: {
-    marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#111827',
-    padding: 14,
-    gap: 10,
-  },
-  cardTitle: {
-    color: '#E2E8F0',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  label: {
-    color: '#94A3B8',
-    fontSize: 14,
-  },
-  value: {
-    color: '#F8FAFC',
-    fontSize: 14,
-    fontWeight: '600',
-    maxWidth: '65%',
-    textAlign: 'right',
-  },
-  primaryButton: {
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: '#2563EB',
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#0B1220',
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  secondaryText: {
-    color: '#E2E8F0',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    opacity: 0.45,
-  },
+  icon: { fontSize: 42, fontWeight: '700', lineHeight: 44 },
+  title: { textAlign: 'center', fontSize: 28, fontWeight: '700', marginTop: 8 },
+  subtitle: { textAlign: 'center', fontSize: 15, lineHeight: 22, marginBottom: 4 },
+  summaryCard: { marginTop: 8, borderRadius: 12, borderWidth: 1, padding: 14, gap: 10 },
+  cardTitle: { fontSize: 16, fontWeight: '700' },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  label: { fontSize: 14 },
+  value: { fontSize: 14, fontWeight: '600', maxWidth: '65%', textAlign: 'right' },
+  primaryButton: { marginTop: 8, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  primaryText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  secondaryButton: { borderRadius: 12, borderWidth: 1, paddingVertical: 14, alignItems: 'center' },
+  secondaryText: { fontSize: 14, fontWeight: '600' },
+  disabledButton: { opacity: 0.45 },
 });

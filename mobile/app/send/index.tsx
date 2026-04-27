@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useThemeColors } from '../src/hooks/useThemeColors';
 
 type ActivityItem = {
   id: string;
@@ -51,21 +53,31 @@ const statusColors: Record<ActivityItem['status'], string> = {
   expired: '#EF4444',
 };
 
-const SkeletonCard = () => <View style={styles.skeletonBlock} />;
-
 export default function SenderDashboardScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setActivity(MOCK_ACTIVITY);
-      setIsLoading(false);
-    }, 900);
+  const loadActivity = () => {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setActivity(MOCK_ACTIVITY);
+        resolve();
+      }, 900);
+    });
+  };
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    loadActivity().then(() => setIsLoading(false));
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadActivity();
+    setRefreshing(false);
+  };
 
   const summary = useMemo(() => {
     const totalSent = activity.reduce((sum, item) => {
@@ -80,11 +92,25 @@ export default function SenderDashboardScreen() {
     };
   }, [activity]);
 
+  const SkeletonCard = () => (
+    <View style={[styles.skeletonBlock, { borderColor: colors.border, backgroundColor: colors.surfaceAlt }]} />
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Sender Dashboard</Text>
-        <Text style={styles.subheading}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        <Text style={[styles.heading, { color: colors.text }]}>Sender Dashboard</Text>
+        <Text style={[styles.subheading, { color: colors.subtext }]}>
           Track your transfer activity and create new claims in one place.
         </Text>
 
@@ -97,31 +123,29 @@ export default function SenderDashboardScreen() {
             </>
           ) : (
             <>
-              <View style={styles.summaryCard}>
-                <Text style={styles.cardLabel}>Total Sent</Text>
-                <Text style={styles.cardValue}>{summary.totalSent}</Text>
-              </View>
-              <View style={styles.summaryCard}>
-                <Text style={styles.cardLabel}>Transfers</Text>
-                <Text style={styles.cardValue}>{summary.totalTransfers}</Text>
-              </View>
-              <View style={styles.summaryCard}>
-                <Text style={styles.cardLabel}>Active Claims</Text>
-                <Text style={styles.cardValue}>{summary.activeClaims}</Text>
-              </View>
+              {[
+                { label: 'Total Sent', value: summary.totalSent },
+                { label: 'Transfers', value: summary.totalTransfers },
+                { label: 'Active Claims', value: summary.activeClaims },
+              ].map(({ label, value }) => (
+                <View key={label} style={[styles.summaryCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <Text style={[styles.cardLabel, { color: colors.subtext }]}>{label}</Text>
+                  <Text style={[styles.cardValue, { color: colors.text }]}>{value}</Text>
+                </View>
+              ))}
             </>
           )}
         </View>
 
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           onPress={() => router.push('/send/create')}
         >
           <Text style={styles.primaryButtonText}>Create Transfer</Text>
         </TouchableOpacity>
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Recent Activity</Text>
+          <Text style={[styles.sectionHeading, { color: colors.text }]}>Recent Activity</Text>
         </View>
 
         {isLoading ? (
@@ -131,30 +155,25 @@ export default function SenderDashboardScreen() {
             <SkeletonCard />
           </View>
         ) : activity.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No activity yet</Text>
-            <Text style={styles.emptySubtitle}>
+          <View style={[styles.emptyState, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No activity yet</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
               Create your first transfer to see activity here.
             </Text>
           </View>
         ) : (
           <View style={styles.activityList}>
             {activity.map((item) => (
-              <View key={item.id} style={styles.activityItem}>
+              <View key={item.id} style={[styles.activityItem, { borderColor: colors.border, backgroundColor: colors.surface }]}>
                 <View>
-                  <Text style={styles.activityRecipient}>{item.recipient}</Text>
-                  <Text style={styles.activityMeta}>{item.createdAt}</Text>
+                  <Text style={[styles.activityRecipient, { color: colors.text }]}>{item.recipient}</Text>
+                  <Text style={[styles.activityMeta, { color: colors.muted }]}>{item.createdAt}</Text>
                 </View>
                 <View style={styles.activityRight}>
-                  <Text style={styles.activityAmount}>
+                  <Text style={[styles.activityAmount, { color: colors.text }]}>
                     {item.amount} {item.asset}
                   </Text>
-                  <Text
-                    style={[
-                      styles.activityStatus,
-                      { color: statusColors[item.status] },
-                    ]}
-                  >
+                  <Text style={[styles.activityStatus, { color: statusColors[item.status] }]}>
                     {item.status}
                   </Text>
                 </View>
@@ -168,128 +187,41 @@ export default function SenderDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-  },
-  content: {
-    padding: 20,
-    gap: 14,
-  },
-  heading: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subheading: {
-    color: '#94A3B8',
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  cardGrid: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
+  container: { flex: 1 },
+  content: { padding: 20, gap: 14 },
+  heading: { fontSize: 28, fontWeight: '700' },
+  subheading: { fontSize: 14, lineHeight: 21 },
+  cardGrid: { flexDirection: 'row', gap: 10, marginTop: 4 },
   summaryCard: {
     flex: 1,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#111827',
     padding: 12,
     minHeight: 96,
     justifyContent: 'space-between',
   },
-  cardLabel: {
-    color: '#94A3B8',
-    fontSize: 13,
-  },
-  cardValue: {
-    color: '#F8FAFC',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  primaryButton: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  sectionHeaderRow: {
-    marginTop: 2,
-  },
-  sectionHeading: {
-    color: '#E2E8F0',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  activityList: {
-    gap: 10,
-  },
+  cardLabel: { fontSize: 13 },
+  cardValue: { fontSize: 22, fontWeight: '700' },
+  primaryButton: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  sectionHeaderRow: { marginTop: 2 },
+  sectionHeading: { fontSize: 18, fontWeight: '700' },
+  activityList: { gap: 10 },
   activityItem: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#111827',
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  activityRecipient: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  activityMeta: {
-    color: '#64748B',
-    marginTop: 2,
-    fontSize: 12,
-  },
-  activityRight: {
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  activityAmount: {
-    color: '#F8FAFC',
-    fontWeight: '700',
-  },
-  activityStatus: {
-    textTransform: 'capitalize',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  emptyState: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#111827',
-    padding: 18,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    color: '#E2E8F0',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  emptySubtitle: {
-    marginTop: 6,
-    color: '#94A3B8',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  skeletonBlock: {
-    height: 88,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#1E293B',
-    flex: 1,
-  },
+  activityRecipient: { fontSize: 15, fontWeight: '600' },
+  activityMeta: { marginTop: 2, fontSize: 12 },
+  activityRight: { alignItems: 'flex-end', gap: 4 },
+  activityAmount: { fontWeight: '700' },
+  activityStatus: { textTransform: 'capitalize', fontSize: 12, fontWeight: '700' },
+  emptyState: { borderRadius: 12, borderWidth: 1, padding: 18, alignItems: 'center' },
+  emptyTitle: { fontSize: 16, fontWeight: '700' },
+  emptySubtitle: { marginTop: 6, textAlign: 'center', lineHeight: 20 },
+  skeletonBlock: { height: 88, borderRadius: 12, borderWidth: 1, flex: 1 },
 });
