@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { TransferService } from './TransferService';
+import { ShareSheet } from './ShareSheet';
 import { CreateAccountRequest, CreateAccountResponse, SupportedAsset } from '../types/api';
 
 type Step = 'amount' | 'recipient' | 'review' | 'success' | 'error';
@@ -22,6 +23,7 @@ export const SenderFlow: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<CreateAccountResponse | null>(null);
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   // Form State
   const [amount, setAmount] = useState('');
@@ -212,6 +214,13 @@ export const SenderFlow: React.FC = () => {
       </View>
 
       <TouchableOpacity
+        style={styles.shareButton}
+        onPress={() => setShowShareSheet(true)}
+      >
+        <Text style={styles.shareButtonText}>📤 Share Claim Link</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         style={styles.primaryButton}
         onPress={() => {
           setAmount('');
@@ -222,6 +231,15 @@ export const SenderFlow: React.FC = () => {
       >
         <Text style={styles.buttonText}>Create Another</Text>
       </TouchableOpacity>
+
+      {response && (
+        <ShareSheet
+          visible={showShareSheet}
+          claimUrl={response.claimUrl}
+          recipientName={recipientName}
+          onClose={() => setShowShareSheet(false)}
+        />
+      )}
     </Animated.View>
   );
 
@@ -446,5 +464,18 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontSize: 14,
     textAlign: 'center',
+  },
+  shareButton: {
+    backgroundColor: '#10B981',
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  shareButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
