@@ -1,7 +1,9 @@
 import { secureStorage } from './storage';
 import { ApiError } from '../types/api';
+import env from '../config/env';
+import logger from '../../../services/logger';
 
-const API_BASE_URL = 'https://api.bridgelet.io'; // Should ideally come from config/env
+const API_BASE_URL = env.apiUrl;
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 
@@ -64,7 +66,7 @@ export async function apiClient<T>(
     try {
       if (attempt > 0) {
         const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1);
-        console.log(`[API] Retrying ${endpoint} (attempt ${attempt}) in ${delay}ms...`);
+        logger.info('API', `Retrying ${endpoint} (attempt ${attempt}) in ${delay}ms...`);
         await wait(delay);
       }
 
