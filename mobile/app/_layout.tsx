@@ -25,6 +25,15 @@ function AppNavigator() {
           options={{ animation: "slide_from_right" }}
         />
         <Stack.Screen
+          name="claim/success"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen name="send/index" options={{ animation: "fade" }} />
+        <Stack.Screen
+          name="send/create"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
           name="security/index"
           options={{ animation: "slide_from_right" }}
         />

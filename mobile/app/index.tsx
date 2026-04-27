@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { secureStorage } from './src/utils/storage';
-import { SenderFlow } from './src/sender/SenderFlow';
 
 export default function HomeIndex() {
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -28,11 +26,7 @@ export default function HomeIndex() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  return (
-    <View style={styles.container}>
-      <SenderFlow />
-    </View>
-  );
+  return <Redirect href="/send" />;
 }
 
 const styles = StyleSheet.create({
