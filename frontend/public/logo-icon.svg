@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none" role="img" aria-label="Bridgelet icon">
+  <!-- Icon: two arcs forming a bridge + forward arrow dot -->
+  <!-- Left arc (source side) -->
+  <path d="M4 34 C4 20 14 10 22 10 C30 10 36 16 36 22" stroke="#0F172A" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- Right arc (destination side) -->
+  <path d="M8 34 C8 22 18 14 22 14 C26 14 30 18 30 22" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- Arrow dot -->
+  <circle cx="38" cy="22" r="3" fill="#3B82F6"/>
+  <!-- Arrow shaft -->
+  <line x1="30" y1="22" x2="35" y2="22" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
