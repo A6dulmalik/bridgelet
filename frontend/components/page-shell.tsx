@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import Logo from './logo';
 
 type PageShellProps = {
   title: string;
@@ -12,8 +12,9 @@ export function PageShell({ title, description, children }: PageShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="border-b border-slate-200 bg-white px-6 py-3">
-        <Link href="/" aria-label="Bridgelet home">
-          <Image src="/logo.svg" alt="Bridgelet" width={140} height={31} priority />
+        <Link href="/" aria-label="Bridgelet home" className="flex items-center gap-2">
+          <Logo className="w-8 h-8" />
+          <span className="text-lg font-medium tracking-tight text-[#0A1628]">bridgelet</span>
         </Link>
       </nav>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">

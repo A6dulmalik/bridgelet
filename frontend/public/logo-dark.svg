@@ -1,13 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 44" fill="none" role="img" aria-label="Bridgelet">
-  <!-- Icon: two arcs forming a bridge + forward arrow dot -->
-  <!-- Left arc (source side) -->
-  <path d="M4 34 C4 20 14 10 22 10 C30 10 36 16 36 22" stroke="#F8FAFC" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <!-- Right arc (destination side) -->
-  <path d="M8 34 C8 22 18 14 22 14 C26 14 30 18 30 22" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <!-- Arrow dot -->
-  <circle cx="38" cy="22" r="3" fill="#60A5FA"/>
-  <!-- Arrow shaft -->
-  <line x1="30" y1="22" x2="35" y2="22" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 36" fill="none" role="img" aria-label="Bridgelet">
+  <!-- Icon mark: rounded square badge (slightly lighter on dark bg) -->
+  <rect width="36" height="36" rx="8" fill="#1E3A5F"/>
+  <!-- Origin dot (sender) -->
+  <circle cx="9" cy="18" r="2.5" fill="#38BDF8"/>
+  <!-- Destination ring (recipient, wallet) -->
+  <circle cx="27" cy="18" r="3.5" stroke="#38BDF8" stroke-width="2" fill="none"/>
+  <!-- Flow path: two lines converging into one -->
+  <path d="M11.5 14 L20 18" stroke="#38BDF8" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M11.5 22 L20 18" stroke="white" stroke-width="1.75" stroke-linecap="round" opacity="0.4"/>
+  <line x1="20" y1="18" x2="23.3" y2="18" stroke="#38BDF8" stroke-width="1.75" stroke-linecap="round"/>
   <!-- Wordmark -->
-  <text x="52" y="29" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="20" font-weight="600" letter-spacing="-0.5" fill="#F8FAFC">bridgelet</text>
+  <text x="46" y="24.5" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18" font-weight="500" letter-spacing="-0.3" fill="#F8FAFC">bridgelet</text>
 </svg>
