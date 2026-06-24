@@ -1,0 +1,134 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { ConnectStep } from './steps/connect-step';
+import { DetailsStep } from './steps/details-step';
+import { ConfirmStep } from './steps/confirm-step';
+
+export type SendFormStep = 'connect' | 'details' | 'confirm';
+
+export interface SendFormState {
+  publicKey: string;
+  recipientEmail: string;
+  amountXlm: string;
+  assetCode: string;
+  memo: string;
+}
+
+const INITIAL_STATE: SendFormState = {
+  publicKey: '',
+  recipientEmail: '',
+  amountXlm: '',
+  assetCode: 'XLM',
+  memo: '',
+};
+
+const STEP_ORDER: SendFormStep[] = ['connect', 'details', 'confirm'];
+
+const STEP_LABELS: Record<SendFormStep, string> = {
+  connect: 'Step 1 of 3: Connect Wallet',
+  details: 'Step 2 of 3: Payment Details',
+  confirm: 'Step 3 of 3: Confirm & Send',
+};
+
+/**
+ * Multi-step send form.
+ *
+ * Accessibility: when the active step changes, focus is programmatically
+ * moved to the step heading so screen reader users hear the new context
+ * without having to navigate backwards from wherever focus was left.
+ */
+export function SendForm() {
+  const [step, setStep] = useState<SendFormStep>('connect');
+  const [formState, setFormState] = useState<SendFormState>(INITIAL_STATE);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // Move focus to the step heading every time the step changes.
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [step]);
+
+  function goNext() {
+    const idx = STEP_ORDER.indexOf(step);
+    const next = STEP_ORDER[idx + 1];
+    if (next) setStep(next);
+  }
+
+  function goBack() {
+    const idx = STEP_ORDER.indexOf(step);
+    const prev = STEP_ORDER[idx - 1];
+    if (prev) setStep(prev);
+  }
+
+  function updateState(patch: Partial<SendFormState>) {
+    setFormState((prev) => ({ ...prev, ...patch }));
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Step indicator */}
+      <nav aria-label="Send form progress">
+        <ol className="flex gap-2" role="list">
+          {STEP_ORDER.map((s, i) => {
+            const isCurrent = s === step;
+            const isDone = STEP_ORDER.indexOf(step) > i;
+            return (
+              <li key={s} className="flex items-center gap-2">
+                {i > 0 && (
+                  <span aria-hidden="true" className="text-slate-300">
+                    /
+                  </span>
+                )}
+                <span
+                  aria-current={isCurrent ? 'step' : undefined}
+                  className={`text-xs font-medium ${
+                    isCurrent
+                      ? 'text-slate-900'
+                      : isDone
+                        ? 'text-green-600'
+                        : 'text-slate-400'
+                  }`}
+                >
+                  {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {isDone && <span className="sr-only"> (complete)</span>}
+                  {isCurrent && <span className="sr-only"> (current)</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      {/* Step heading — receives focus on every step transition */}
+      <h2
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-xl font-semibold text-slate-900 focus:outline-none"
+      >
+        {STEP_LABELS[step]}
+      </h2>
+
+      {/* Step content */}
+      {step === 'connect' && (
+        <ConnectStep
+          publicKey={formState.publicKey}
+          onConnected={(key) => {
+            updateState({ publicKey: key });
+            goNext();
+          }}
+        />
+      )}
+      {step === 'details' && (
+        <DetailsStep
+          state={formState}
+          onChange={updateState}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      )}
+      {step === 'confirm' && (
+        <ConfirmStep state={formState} onBack={goBack} />
+      )}
+    </div>
+  );
+}
