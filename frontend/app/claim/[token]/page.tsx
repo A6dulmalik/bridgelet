@@ -1,4 +1,5 @@
 import { PageShell } from '@/components/page-shell';
+import { SharePrompt } from '@/components/share-prompt';
 import { publicEnv } from '@/lib/env';
 
 type ClaimPageProps = {
@@ -23,6 +24,7 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
           <dd>{publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL}</dd>
         </div>
       </dl>
+      <SharePrompt appUrl={publicEnv.NEXT_PUBLIC_APP_URL} />
     </PageShell>
   );
 }
