@@ -1,4 +1,5 @@
 import { setupWorker } from 'msw/browser';
+import { horizonHandlers } from './handlers/horizon';
 import { accountHandlers } from './handlers/accounts';
 
 /**
