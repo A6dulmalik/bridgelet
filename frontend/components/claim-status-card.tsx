@@ -19,6 +19,8 @@ export interface ClaimStatusCardProps {
   memo?: string;
   /** Called when the recipient taps "Claim now". */
   onClaim?: () => void | Promise<void>;
+  /** Developer-facing note from the API (e.g. sweep_status stub message). */
+  sweepNote?: string;
   /** Support contact email shown in the expired state. */
   supportEmail?: string;
 }
@@ -68,7 +70,8 @@ function AvailablePanel({
   expiresAt,
   memo,
   onClaim,
-}: Pick<ClaimStatusCardProps, 'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim'>) {
+  sweepNote,
+}: Pick<ClaimStatusCardProps, 'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'>) {
   const [claiming, setClaiming] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -84,9 +87,16 @@ function AvailablePanel({
 
   if (done) {
     return (
-      <p role="status" className="text-sm font-medium text-green-700">
-        Claim submitted! Check your wallet for the incoming transfer.
-      </p>
+      <div className="space-y-2">
+        <p role="status" className="text-sm font-medium text-green-700">
+          Claim submitted! Check your wallet for the incoming transfer.
+        </p>
+        {sweepNote && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+            🛠 Dev note: {sweepNote}
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -225,6 +235,7 @@ export function ClaimStatusCard({
   expiresAt,
   memo,
   onClaim,
+  sweepNote,
   supportEmail,
 }: ClaimStatusCardProps) {
   const headers: Record<ClaimStatus, string> = {
@@ -258,6 +269,7 @@ export function ClaimStatusCard({
           expiresAt={expiresAt}
           memo={memo}
           onClaim={onClaim}
+          sweepNote={sweepNote}
         />
       )}
       {status === 'claimed' && <ClaimedPanel />}
