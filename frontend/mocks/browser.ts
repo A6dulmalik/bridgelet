@@ -1,11 +1,6 @@
 import { setupWorker } from 'msw/browser';
-import { horizonHandlers } from './handlers/horizon';
 import { accountHandlers } from './handlers/accounts';
+import { horizonHandlers } from './handlers/horizon';
+import { claimsHandlers } from './handlers/claims';
 
-/**
- * MSW service worker for browser environments.
- *
- * Start this once in development to intercept fetch/XHR calls.
- * The worker is only initialised when this module is imported.
- */
-export const worker = setupWorker(...accountHandlers);
+export const worker = setupWorker(...accountHandlers, ...horizonHandlers, ...claimsHandlers);
