@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { DevToolbar } from '@/components/dev-toolbar';
+import { MockProvider } from '@/components/mock-provider';
 
 export const metadata: Metadata = {
   title: 'Bridgelet Payments',
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         {children}
         {isDev && <DevToolbar />}
+        {isDev && <MockProvider />}
       </body>
     </html>
   );
