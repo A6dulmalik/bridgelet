@@ -1,21 +1,29 @@
 # Bridgelet Testing Documentation
 
-This document provides comprehensive testing guidelines for the Bridgelet SDK integration, covering testing strategies, test categories, and best practices for contributors.
+This document provides comprehensive testing guidelines for the Bridgelet project, covering the frontend web app, mobile app, and SDK integration. It includes testing strategies, tooling setup, and best practices for contributors.
 
 ## Table of Contents
 
 1. [Testing Philosophy](#testing-philosophy)
 2. [Test Categories](#test-categories)
-3. [Unit Tests](#unit-tests)
-4. [Integration Tests](#integration-tests)
-5. [End-to-End (E2E) Tests](#end-to-end-e2e-tests)
-6. [Manual Testing](#manual-testing)
-7. [Testing Against Live Testnet](#testing-against-live-testnet)
-8. [Testing with Mock Data](#testing-with-mock-data)
-9. [Test Data Requirements](#test-data-requirements)
-10. [Release Testing Checklist](#release-testing-checklist)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Contributing Tests](#contributing-tests)
+3. [Test Coverage Overview](#test-coverage-overview)
+4. [Frontend Testing](#frontend-testing)
+   - [MSW Mock Service Worker](#msw-mock-service-worker)
+   - [Unit and Component Tests](#unit-and-component-tests)
+   - [Playwright E2E Tests](#playwright-e2e-tests)
+   - [Storybook Visual Testing](#storybook-visual-testing)
+   - [Lighthouse CI Performance Audits](#lighthouse-ci-performance-audits)
+5. [Mobile Testing](#mobile-testing)
+6. [Unit Tests](#unit-tests)
+7. [Integration Tests](#integration-tests)
+8. [End-to-End (E2E) Tests](#end-to-end-e2e-tests)
+9. [Manual Testing](#manual-testing)
+10. [Testing Against Live Testnet](#testing-against-live-testnet)
+11. [Testing with Mock Data](#testing-with-mock-data)
+12. [Test Data Requirements](#test-data-requirements)
+13. [Release Testing Checklist](#release-testing-checklist)
+14. [Troubleshooting Guide](#troubleshooting-guide)
+15. [Contributing Tests](#contributing-tests)
 
 ## Testing Philosophy
 
@@ -27,9 +35,521 @@ The Bridgelet testing strategy is built on multiple layers of validation to ensu
 - **Coverage Goals:** Aim for >80% code coverage on critical paths (SDK, smart contracts)
 - **Representative Data:** Test data should reflect real-world usage patterns
 
+## Test Coverage Overview
+
+The table below maps each part of the codebase to the testing tools and the current status of that coverage.
+
+| Area | Tool(s) | Scope | Status |
+|---|---|---|---|
+| Frontend components | Vitest + React Testing Library | Unit / component rendering | 🔲 Planned |
+| Frontend API layer | MSW v2 | Network mock in dev and tests | ✅ Mock handlers implemented |
+| Frontend E2E flows | Playwright | Full browser user journeys | 🔲 Planned |
+| Frontend visual regression | Storybook + Chromatic | Component story snapshots | 🔲 Planned |
+| Frontend performance | Lighthouse CI | Core Web Vitals, accessibility score | 🔲 Planned |
+| Mobile unit tests | Jest + jest-expo | Component and utility logic | ⚠️ Runner configured, no test files yet |
+| SDK unit tests | Jest | Core account / payment logic | 🔲 Planned |
+| SDK integration tests | Jest + Stellar testnet | Blockchain interactions | 🔲 Planned |
+| E2E system tests | Playwright | End-to-end cross-layer flows | 🔲 Planned |
+
+Legend: ✅ In place · ⚠️ Partially set up · 🔲 Planned
+
+> Coverage thresholds are not yet enforced in CI. The target is **≥ 80 %** on critical paths once the unit test suites are stable. See [BRANCH_PROTECTION.md](.github/BRANCH_PROTECTION.md) for the CI gate policy.
+
+---
+
+## Frontend Testing
+
+The frontend lives in `frontend/` and is a Next.js 16 App Router application written in TypeScript. Its testing stack is being built incrementally; this section documents both what is already in place and what to add next.
+
+### MSW Mock Service Worker
+
+[Mock Service Worker (MSW) v2](https://mswjs.io/) intercepts `fetch` and XHR calls at the network level. The frontend ships a fully implemented set of handlers used for local development and, once a test runner is wired up, for component and integration tests as well.
+
+#### Handler inventory
+
+| Handler file | Method + URL | What it mocks |
+|---|---|---|
+| `mocks/handlers/accounts.ts` | `POST /api/accounts` | Creates a fake ephemeral Stellar account; 300 ms delay |
+| `mocks/handlers/claims.ts` | `POST /claims/redeem` | Returns a stubbed claim/sweep response |
+| `mocks/handlers/horizon.ts` | `GET https://horizon-testnet.stellar.org/fee_stats` | Testnet fee statistics |
+| `mocks/handlers/horizon.ts` | `GET https://horizon-testnet.stellar.org/accounts/:id` | Testnet account with 10 000 XLM balance |
+
+#### Activating MSW in development
+
+The worker is **not** started automatically. Add the following to `app/layout.tsx` (or your top-level client component) to activate it in development:
+
+```tsx
+// app/layout.tsx
+if (process.env.NODE_ENV === 'development') {
+  const { initMocks } = await import('@/mocks');
+  await initMocks();
+}
+```
+
+`initMocks()` is a no-op in SSR contexts (`typeof window === 'undefined'` guard is already in place).
+
+#### Running MSW in tests
+
+When Vitest (or Jest) is added to the frontend, use `msw/node` for a server-side handler instead of the browser service worker:
+
+```ts
+// tests/setup.ts
+import { server } from '@/mocks/server'; // create this file — see below
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+Create `frontend/mocks/server.ts` alongside `browser.ts`:
+
+```ts
+// frontend/mocks/server.ts
+import { setupServer } from 'msw/node';
+import { accountHandlers } from './handlers/accounts';
+import { claimsHandlers } from './handlers/claims';
+import { horizonHandlers } from './handlers/horizon';
+
+export const server = setupServer(
+  ...accountHandlers,
+  ...claimsHandlers,
+  ...horizonHandlers,
+);
+```
+
+To override a handler for a single test:
+
+```ts
+import { http, HttpResponse } from 'msw';
+import { server } from '@/mocks/server';
+
+it('shows an error when account creation fails', async () => {
+  server.use(
+    http.post('/api/accounts', () =>
+      HttpResponse.json({ error: 'Service unavailable' }, { status: 503 }),
+    ),
+  );
+
+  // render and assert...
+});
+```
+
+#### Known issue — missing import in `browser.ts`
+
+`frontend/mocks/browser.ts` uses `horizonHandlers` but the import line is missing. Add it:
+
+```ts
+import { horizonHandlers } from './handlers/horizon';
+```
+
+---
+
+### Unit and Component Tests
+
+The frontend does not yet have a unit test runner configured. The recommended setup uses **Vitest** (fast, native ESM, shares the TypeScript config) together with **React Testing Library**.
+
+#### Setup
+
+```bash
+cd frontend
+npm install --save-dev vitest @vitejs/plugin-react jsdom \
+  @testing-library/react @testing-library/user-event \
+  @testing-library/jest-dom
+```
+
+Add a `vitest.config.ts` at `frontend/`:
+
+```ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      thresholds: { lines: 80, branches: 80, functions: 80 },
+      exclude: ['**/node_modules/**', '**/mocks/**', '**/*.d.ts'],
+    },
+  },
+  resolve: {
+    alias: { '@': path.resolve(__dirname, '.') },
+  },
+});
+```
+
+Add the test script to `frontend/package.json`:
+
+```json
+"scripts": {
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage"
+}
+```
+
+#### Running tests
+
+```bash
+# Single run (used in CI)
+npm test
+
+# Watch mode for local development
+npm run test:watch
+
+# With coverage report
+npm run test:coverage
+```
+
+---
+
+### Playwright E2E Tests
+
+Playwright drives a real browser against the running Next.js dev or preview server. Use it for critical user journeys: sender flow, claim flow, and error paths.
+
+#### Setup
+
+```bash
+cd frontend
+npm install --save-dev @playwright/test
+npx playwright install --with-deps chromium
+```
+
+Create `frontend/playwright.config.ts`:
+
+```ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI ? 'github' : 'list',
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+#### Writing tests
+
+Place test files in `frontend/e2e/`. MSW service worker is active in the dev server, so network calls are intercepted automatically.
+
+```ts
+// e2e/send-flow.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('sender can complete the send form', async ({ page }) => {
+  await page.goto('/send');
+
+  // connect wallet step
+  await page.getByRole('button', { name: /connect wallet/i }).click();
+  await expect(page.getByText(/wallet connected/i)).toBeVisible();
+
+  // fill details
+  await page.getByLabel('Amount').fill('10');
+  await page.getByRole('button', { name: /continue/i }).click();
+
+  // confirm step
+  await expect(page.getByText(/confirm/i)).toBeVisible();
+  await page.getByRole('button', { name: /send/i }).click();
+
+  // share prompt
+  await expect(page.getByText(/share this link/i)).toBeVisible();
+});
+```
+
+```ts
+// e2e/claim-flow.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('recipient can claim funds with a valid token', async ({ page }) => {
+  await page.goto('/claim/abc123mock');
+  await expect(page.getByRole('heading', { name: /claim/i })).toBeVisible();
+  await page.getByRole('button', { name: /claim funds/i }).click();
+  await expect(page.getByText(/success/i)).toBeVisible();
+});
+```
+
+#### Running Playwright tests
+
+```bash
+# Headless (CI-style)
+npx playwright test
+
+# Interactive UI mode
+npx playwright test --ui
+
+# Single file
+npx playwright test e2e/send-flow.spec.ts
+
+# Debug mode (pauses on each step)
+npx playwright test --debug
+```
+
+Add to `frontend/package.json`:
+
+```json
+"scripts": {
+  "test:e2e": "playwright test",
+  "test:e2e:ui": "playwright test --ui"
+}
+```
+
+#### CI integration
+
+The existing `frontend-ci.yml` workflow will pick up `test:e2e` once it is added to the `test` script, or add a dedicated job:
+
+```yaml
+- name: Install Playwright browsers
+  run: npx playwright install --with-deps chromium
+  working-directory: frontend
+
+- name: Run E2E tests
+  run: npm run test:e2e
+  working-directory: frontend
+```
+
+---
+
+### Storybook Visual Testing
+
+Storybook documents UI components in isolation and enables visual regression testing via [Chromatic](https://www.chromatic.com/).
+
+#### Setup
+
+```bash
+cd frontend
+npx storybook@latest init
+# Choose: Next.js, TypeScript, no ESLint extension
+```
+
+This creates `.storybook/` with `main.ts` and `preview.ts`, and adds Storybook scripts to `package.json`.
+
+#### Writing stories
+
+Create a story file alongside each component, e.g. `components/share-prompt.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { SharePrompt } from './share-prompt';
+
+const meta: Meta<typeof SharePrompt> = {
+  title: 'Components/SharePrompt',
+  component: SharePrompt,
+  parameters: { layout: 'centered' },
+};
+export default meta;
+
+type Story = StoryObj<typeof SharePrompt>;
+
+export const Default: Story = {
+  args: {
+    claimUrl: 'https://bridgelet.app/claim/abc123',
+  },
+};
+
+export const LongUrl: Story = {
+  args: {
+    claimUrl: 'https://bridgelet.app/claim/' + 'x'.repeat(64),
+  },
+};
+```
+
+Cover the main components:
+
+| Component | Story variants to add |
+|---|---|
+| `ClaimStatusCard` | loading, success, expired, error |
+| `SharePrompt` | default, long URL, copied state |
+| `WalletConnect` | disconnected, connecting, connected |
+| `SendForm` steps | connect, details, confirm |
+| `Logo` | light, dark |
+| `PageShell` | default layout |
+
+#### Running Storybook
+
+```bash
+# Start dev server at http://localhost:6006
+npm run storybook
+
+# Build a static version
+npm run build-storybook
+```
+
+#### Visual regression with Chromatic
+
+```bash
+npm install --save-dev chromatic
+npx chromatic --project-token=<your-token>
+```
+
+Add to CI:
+
+```yaml
+- name: Publish to Chromatic
+  run: npx chromatic --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+  working-directory: frontend
+```
+
+Chromatic compares component snapshots on each PR. Reviewers approve or reject visual diffs in the Chromatic dashboard before merging.
+
+---
+
+### Lighthouse CI Performance Audits
+
+Lighthouse CI runs Google Lighthouse against the built app on every pull request and enforces minimum scores for performance, accessibility, best practices, and SEO.
+
+#### Setup
+
+```bash
+cd frontend
+npm install --save-dev @lhci/cli
+```
+
+Create `frontend/lighthouserc.cjs`:
+
+```js
+module.exports = {
+  ci: {
+    collect: {
+      // Build and serve the Next.js app, then audit these URLs
+      startServerCommand: 'npm run start',
+      startServerReadyPattern: 'ready on',
+      url: [
+        'http://localhost:3000/',
+        'http://localhost:3000/send',
+        'http://localhost:3000/claim/abc123',
+      ],
+      numberOfRuns: 3,
+    },
+    assert: {
+      assertions: {
+        'categories:performance':     ['warn',  { minScore: 0.8 }],
+        'categories:accessibility':   ['error', { minScore: 0.9 }],
+        'categories:best-practices':  ['warn',  { minScore: 0.9 }],
+        'categories:seo':             ['warn',  { minScore: 0.8 }],
+      },
+    },
+    upload: {
+      target: 'temporary-public-storage', // replace with LHCI server URL in production
+    },
+  },
+};
+```
+
+Add scripts to `frontend/package.json`:
+
+```json
+"scripts": {
+  "lhci": "lhci autorun"
+}
+```
+
+#### CI integration
+
+Add a separate workflow or job so Lighthouse audits run after a successful build:
+
+```yaml
+lighthouse:
+  name: Lighthouse CI
+  runs-on: ubuntu-latest
+  needs: build-and-test
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+    - run: npm ci
+      working-directory: frontend
+    - run: npm run build
+      working-directory: frontend
+    - run: npm run lhci
+      working-directory: frontend
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+```
+
+#### Score thresholds
+
+| Category | Warning threshold | Error threshold |
+|---|---|---|
+| Performance | 80 | — |
+| Accessibility | — | 90 |
+| Best Practices | 90 | — |
+| SEO | 80 | — |
+
+Accessibility failures block the CI job (`error` level). The others emit warnings. Adjust thresholds in `lighthouserc.cjs` as the app matures.
+
+---
+
+## Mobile Testing
+
+The mobile app lives in `mobile/` and uses Expo + React Native. Jest is already configured.
+
+### Running mobile tests
+
+```bash
+cd mobile
+npm test                    # single run with coverage
+npm test -- --watch         # watch mode
+npm test -- --testPathPattern="ComponentName"   # single file
+```
+
+### Jest configuration
+
+`mobile/jest.config.js` uses the `jest-expo` preset which handles Babel transforms for React Native packages. Coverage is collected from all `*.ts` and `*.tsx` files.
+
+```js
+// mobile/jest.config.js (current)
+module.exports = {
+  preset: 'jest-expo',
+  collectCoverage: true,
+  collectCoverageFrom: [
+    '**/*.{ts,tsx}',
+    '!**/node_modules/**',
+    '!**/vendor/**',
+  ],
+};
+```
+
+Place test files next to the source files or in `__tests__/` directories:
+
+```
+mobile/
+  app/
+    (onboarding)/
+      index.tsx
+      __tests__/
+        index.test.tsx
+  components/
+    my-component.tsx
+    my-component.test.tsx
+```
+
+---
+
 ## Test Categories
 
-Bridgelet employs a multi-tiered testing strategy:
+Bridgelet employs a multi-tiered testing strategy across the frontend, mobile, and SDK layers:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -312,5 +832,5 @@ npm run test:e2e -- claim-flow.spec.ts
 
 ---
 
-**Last Updated:** February 2026
+**Last Updated:** June 2026
 **Maintained By:** Bridgelet Core Team
