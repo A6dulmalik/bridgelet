@@ -242,6 +242,9 @@ export function ClaimStatusCard({
   return (
     <article
       aria-label={`Claim status: ${status}`}
+      aria-live="polite"
+      aria-atomic="true"
+      aria-relevant="additions text"
       className={`rounded-xl border-2 ${borderColors[status]} bg-white p-5 shadow-sm space-y-4`}
     >
       <header className="flex items-center justify-between">
