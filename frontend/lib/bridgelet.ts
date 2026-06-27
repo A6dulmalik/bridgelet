@@ -73,3 +73,34 @@ export interface ApiError {
   message: string;
   statusCode: number;
 }
+
+export {
+  BridgeletClient,
+  type BridgeletClientOptions,
+} from '@/lib/create-bridgelet-client';
+
+let _defaultClient: BridgeletClient | null = null;
+
+function defaultClient(): BridgeletClient {
+  if (!_defaultClient) {
+    _defaultClient = new BridgeletClient();
+  }
+  return _defaultClient;
+}
+
+export function getClaimDetails(token: string): Promise<ClaimDetailsResponse> {
+  return defaultClient().getClaimDetails(token);
+}
+
+export function createPaymentIntent(
+  data: CreatePaymentIntentRequest,
+): Promise<CreatePaymentIntentResponse> {
+  return defaultClient().createPaymentIntent(data);
+}
+
+export function redeemClaim(
+  token: string,
+  data: RedeemClaimRequest,
+): Promise<RedeemClaimResponse> {
+  return defaultClient().redeemClaim(token, data);
+}
