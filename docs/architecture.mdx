@@ -1,0 +1,36 @@
+---
+title: Architecture Overview
+description: System architecture of the Bridgelet platform
+---
+
+# Architecture Overview
+
+## System Flow
+
+```mermaid
+graph LR
+  FE[bridgelet<br/>Next.js frontend]
+  SDK[bridgelet-sdk<br/>NestJS backend]
+  CORE[bridgelet-core<br/>Soroban contracts]
+  STELLAR[Stellar Network]
+
+  FE -->|POST /send| SDK
+  FE -->|POST /claims/redeem| SDK
+  SDK -->|invoke contract| CORE
+  CORE -->|on-chain tx| STELLAR
+  SDK -->|horizon API| STELLAR
+```
+
+## Components
+
+### bridgelet (frontend)
+Next.js app serving the sender send-flow and recipient claim flow.
+
+### bridgelet-sdk
+NestJS service managing ephemeral account lifecycle, claim authentication, and webhook delivery.
+
+### bridgelet-core
+Soroban smart contracts enforcing on-chain restrictions: funding source, amount cap, expiry, and sweep.
+
+### Stellar Network
+The bridgelet-core contracts run on Stellar's Soroban environment (testnet and mainnet).
