@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { RateLimitBanner } from '@/components/rate-limit-banner';
+import { RateLimitError } from '@/lib/redeem';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,12 +76,20 @@ function AvailablePanel({
 }: Pick<ClaimStatusCardProps, 'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'>) {
   const [claiming, setClaiming] = useState(false);
   const [done, setDone] = useState(false);
+  const [rateLimit, setRateLimit] = useState<number | null | undefined>(undefined);
 
   async function handleClaim() {
     setClaiming(true);
+    setRateLimit(undefined);
     try {
       await onClaim?.();
       setDone(true);
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        setRateLimit(err.retryAfter);
+      } else {
+        throw err;
+      }
     } finally {
       setClaiming(false);
     }
@@ -124,6 +134,8 @@ function AvailablePanel({
           </div>
         )}
       </dl>
+
+      {rateLimit !== undefined && <RateLimitBanner retryAfter={rateLimit} />}
 
       <button
         type="button"
