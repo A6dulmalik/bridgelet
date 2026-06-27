@@ -1,0 +1,51 @@
+---
+title: Integration Guide
+description: How to integrate Bridgelet into your application
+---
+
+# Integration Guide
+
+## Installation
+
+```bash
+npm install bridgelet-sdk
+```
+
+## 1. Create an Ephemeral Account
+
+```ts
+import { BridgeletSDK } from 'bridgelet-sdk';
+
+const sdk = new BridgeletSDK({ apiKey: process.env.BRIDGELET_API_KEY });
+
+const intent = await sdk.send({
+  senderPublicKey: 'G...',
+  amountStroops: '50000000', // 5 XLM
+  assetCode: 'XLM',
+});
+
+console.log(intent.claimUrl); // share this with the recipient
+```
+
+## 2. Generate a Claim Link
+
+The SDK returns a `claimUrl` in the response. Send it to the recipient via SMS, email, or QR code.
+
+```ts
+const shortUrl = buildShortClaimUrl(process.env.APP_URL, intent.claimToken);
+```
+
+## 3. Handle Webhook Events
+
+```ts
+sdk.on('claim.success', (event) => {
+  console.log('Claimed by', event.recipientPublicKey);
+});
+```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `BRIDGELET_API_KEY` | Your API key |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL of the bridgelet-sdk instance |
