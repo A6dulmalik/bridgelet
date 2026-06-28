@@ -1,0 +1,37 @@
+name: UI Audit & Quality Assurance Gates
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lighthouse-audit:
+    name: Run Performance & Accessibility Gateways
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Application Dependencies
+        run: npm ci
+
+      - name: Install Global Lighthouse CI CLI
+        run: npm install -g @lhci/cli@0.13.x
+
+      # Compile production build assets (Next.js SSG export or Vite output)
+      - name: Compile Production Application Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_DISABLE_ANALYTICS: true
+
+      - name: Run Lighthouse Audit Assertions Matrix
+        run: lhci autorun
