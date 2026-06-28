@@ -24,14 +24,16 @@ jobs:
       - name: Install Application Dependencies
         run: npm ci
 
-      - name: Install Global Lighthouse CI CLI
-        run: npm install -g @lhci/cli@0.13.x
-
-      # Compile production build assets (Next.js SSG export or Vite output)
+      # Compile production build assets
       - name: Compile Production Application Build
         run: npm run build
         env:
           NEXT_PUBLIC_DISABLE_ANALYTICS: true
 
+      # Orchestrate background server lifecycle and run Lighthouse CI
       - name: Run Lighthouse Audit Assertions Matrix
-        run: lhci autorun
+        run: |
+          npx start-server-and-test \
+            'npm run start' \
+            http://127.0.0.1:3000 \
+            'npx @lhci/cli@0.13.x autorun'
