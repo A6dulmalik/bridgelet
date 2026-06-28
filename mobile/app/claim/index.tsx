@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { lookupClaimByToken, ClaimLookupResult } from "../src/claims/service";
 import {
@@ -16,25 +18,39 @@ import {
   sanitizeTokenInput,
   validateClaimToken,
 } from "../src/claims/token";
+import { useThemeColors } from "../src/hooks/useThemeColors";
 
 const summarizeToken = (token: string): string => {
-  if (token.length <= 36) {
-    return token;
-  }
-
+  if (token.length <= 36) return token;
   return `${token.slice(0, 18)}...${token.slice(-12)}`;
 };
 
+const createMockTxHash = (seed: string): string => {
+  const hex = Array.from(seed)
+    .map((char) => char.charCodeAt(0).toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 64);
+  return (hex + "0".repeat(64)).slice(0, 64);
+};
+
 export default function ClaimTokenEntryScreen() {
+  const router = useRouter();
+  const colors = useThemeColors();
   const [tokenInput, setTokenInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<ClaimLookupResult | null>(null);
 
-  const normalizedToken = useMemo(
-    () => sanitizeTokenInput(tokenInput),
-    [tokenInput],
-  );
+  const normalizedToken = useMemo(() => sanitizeTokenInput(tokenInput), [tokenInput]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setTokenInput("");
+    setErrorMessage(null);
+    setResult(null);
+    setRefreshing(false);
+  };
 
   const handlePaste = async () => {
     const clipboardValue = await Clipboard.getStringAsync();
@@ -42,7 +58,6 @@ export default function ClaimTokenEntryScreen() {
       setErrorMessage("Clipboard is empty.");
       return;
     }
-
     setTokenInput(sanitizeTokenInput(clipboardValue));
     setErrorMessage(null);
     setResult(null);
@@ -51,14 +66,12 @@ export default function ClaimTokenEntryScreen() {
   const handleLookup = async () => {
     setErrorMessage(null);
     setResult(null);
-
     try {
       validateClaimToken(normalizedToken);
     } catch (error) {
       setErrorMessage(getClaimTokenErrorMessage(error));
       return;
     }
-
     setIsLoading(true);
     try {
       const claim = await lookupClaimByToken(normalizedToken);
@@ -71,23 +84,30 @@ export default function ClaimTokenEntryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
-        <Text style={styles.title}>Enter Claim Token</Text>
-        <Text style={styles.subtitle}>
-          Paste a claim link or enter a claim token manually to verify
-          availability.
+        <Text style={[styles.title, { color: colors.text }]}>Enter Claim Token</Text>
+        <Text style={[styles.subtitle, { color: colors.subtext }]}>
+          Paste a claim link or enter a claim token manually to verify availability.
         </Text>
 
         <TextInput
           value={tokenInput}
           onChangeText={setTokenInput}
-          style={styles.tokenInput}
+          style={[styles.tokenInput, { borderColor: colors.border, backgroundColor: colors.inputBg, color: colors.inputText }]}
           placeholder="Paste token or URL"
-          placeholderTextColor="#64748B"
+          placeholderTextColor={colors.muted}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -98,14 +118,14 @@ export default function ClaimTokenEntryScreen() {
 
         <View style={styles.row}>
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[styles.secondaryButton, { borderColor: colors.borderAlt }]}
             onPress={handlePaste}
             disabled={isLoading}
           >
-            <Text style={styles.secondaryButtonText}>Paste from Clipboard</Text>
+            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>Paste from Clipboard</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
             onPress={handleLookup}
             disabled={isLoading}
           >
@@ -115,26 +135,42 @@ export default function ClaimTokenEntryScreen() {
 
         {isLoading && (
           <View style={styles.loadingRow}>
-            <ActivityIndicator color="#38BDF8" />
-            <Text style={styles.loadingText}>Verifying claim token...</Text>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.subtext }]}>Verifying claim token...</Text>
           </View>
         )}
 
-        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
+        {errorMessage && (
+          <Text style={[styles.errorText, { color: colors.errorText, backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+            {errorMessage}
+          </Text>
+        )}
 
         {result && (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultTitle}>Claim Found</Text>
-            <Text style={styles.resultRow}>Account: {result.accountId}</Text>
-            <Text style={styles.resultRow}>Amount: {result.amount}</Text>
-            <Text style={styles.resultRow}>Asset: {result.asset}</Text>
+          <View style={[styles.resultCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+            <Text style={[styles.resultTitle, { color: colors.successText }]}>Claim Found</Text>
+            <Text style={[styles.resultRow, { color: colors.text }]}>Account: {result.accountId}</Text>
+            <Text style={[styles.resultRow, { color: colors.text }]}>Amount: {result.amount}</Text>
+            <Text style={[styles.resultRow, { color: colors.text }]}>Asset: {result.asset}</Text>
             {result.expiresAt ? (
-              <Text style={styles.resultRow}>Expires: {result.expiresAt}</Text>
+              <Text style={[styles.resultRow, { color: colors.text }]}>Expires: {result.expiresAt}</Text>
             ) : null}
-            <Text style={styles.tokenLabel}>Token</Text>
-            <Text selectable style={styles.tokenPreview}>
+            <Text style={[styles.tokenLabel, { color: colors.subtext }]}>Token</Text>
+            <Text selectable style={[styles.tokenPreview, { color: colors.text }]}>
               {summarizeToken(normalizedToken)}
             </Text>
+            <TouchableOpacity
+              style={styles.claimButton}
+              onPress={() => {
+                const txHash = createMockTxHash(`${result.accountId}:${normalizedToken}`);
+                router.push({
+                  pathname: "/claim/success",
+                  params: { amount: result.amount, asset: result.asset, accountId: result.accountId, txHash },
+                });
+              }}
+            >
+              <Text style={styles.claimButtonText}>Complete Claim</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -143,105 +179,38 @@ export default function ClaimTokenEntryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: "#94A3B8",
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  container: { flex: 1 },
+  content: { padding: 20, gap: 12 },
+  title: { fontSize: 24, fontWeight: "700" },
+  subtitle: { fontSize: 14, lineHeight: 20 },
   tokenInput: {
     minHeight: 140,
     maxHeight: 220,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
-    backgroundColor: "#111827",
     padding: 12,
-    color: "#E2E8F0",
     fontSize: 13,
     fontFamily: "Courier",
   },
-  row: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  row: { flexDirection: "row", gap: 8 },
   secondaryButton: {
     flex: 1,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#475569",
     paddingVertical: 12,
     alignItems: "center",
   },
-  secondaryButtonText: {
-    color: "#E2E8F0",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  primaryButton: {
-    flex: 1,
-    borderRadius: 10,
-    backgroundColor: "#2563EB",
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  loadingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 8,
-  },
-  loadingText: {
-    color: "#BAE6FD",
-  },
-  errorText: {
-    color: "#FCA5A5",
-    backgroundColor: "#3F1D1D",
-    padding: 10,
-    borderRadius: 10,
-    borderColor: "#7F1D1D",
-    borderWidth: 1,
-  },
-  resultCard: {
-    marginTop: 8,
-    backgroundColor: "#0B1220",
-    borderColor: "#1E293B",
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    gap: 6,
-  },
-  resultTitle: {
-    color: "#86EFAC",
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-  resultRow: {
-    color: "#E2E8F0",
-  },
-  tokenLabel: {
-    color: "#94A3B8",
-    marginTop: 8,
-  },
-  tokenPreview: {
-    color: "#E2E8F0",
-    fontFamily: "Courier",
-  },
+  secondaryButtonText: { fontWeight: "600", fontSize: 14 },
+  primaryButton: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  primaryButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
+  loadingRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
+  loadingText: {},
+  errorText: { padding: 10, borderRadius: 10, borderWidth: 1 },
+  resultCard: { marginTop: 8, borderWidth: 1, borderRadius: 12, padding: 12, gap: 6 },
+  resultTitle: { fontWeight: "700", marginBottom: 2 },
+  resultRow: {},
+  tokenLabel: { marginTop: 8 },
+  tokenPreview: { fontFamily: "Courier" },
+  claimButton: { marginTop: 12, borderRadius: 10, backgroundColor: "#16A34A", paddingVertical: 12, alignItems: "center" },
+  claimButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
 });

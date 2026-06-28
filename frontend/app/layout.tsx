@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
+import { DevToolbar } from '@/components/dev-toolbar';
+import { MockProvider } from '@/components/mock-provider';
 
 export const metadata: Metadata = {
   title: 'Bridgelet Payments',
-  description: 'Reference UI for sending and claiming crypto payments.'
+  description: 'Reference UI for sending and claiming crypto payments.',
+  icons: { icon: '/logo-icon.svg' }
 };
 
 type RootLayoutProps = {
@@ -12,9 +15,15 @@ type RootLayoutProps = {
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  const isDev = process.env.NODE_ENV === 'development';
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        {isDev && <DevToolbar />}
+        {isDev && <MockProvider />}
+      </body>
     </html>
   );
 }

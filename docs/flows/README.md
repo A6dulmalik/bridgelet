@@ -141,6 +141,8 @@ All errors follow a consistent pattern:
 - Rate limiting on all endpoints
 - HTTPS only for all communications
 
+> For the full threat model (15 threats with mitigations and status), MVP stub callouts, and transport security details, see [`/docs/security-model.mdx`](../security-model.mdx).
+
 ## Testing Scenarios
 
 Based on these flows, the following test scenarios should be covered:
