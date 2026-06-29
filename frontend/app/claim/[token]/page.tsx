@@ -1,28 +1,54 @@
 import { PageShell } from '@/components/page-shell';
+import { SharePrompt } from '@/components/share-prompt';
+import { ClaimStatusCard } from '@/components/claim-status-card';
 import { publicEnv } from '@/lib/env';
 
 type ClaimPageProps = {
   params: Promise<{ token: string }>;
 };
 
+/**
+ * Claim page — resolves the token from the URL and renders the correct
+ * `ClaimStatusCard` state.
+ *
+ * In production this would call `GET /claim/:token` to determine the real
+ * status. Until the API is wired up the page uses a static demo state so all
+ * three card variants can be exercised by appending `?state=claimed` or
+ * `?state=expired` to the URL (handled client-side via the `ClaimStatusCard`
+ * component directly on the demo page).
+ */
 export default async function ClaimPage({ params }: ClaimPageProps) {
   const { token } = await params;
 
+  // Demo data — replace with a real API fetch once /claim/:token is live.
+  const demoExpiresAt = new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString();
+
   return (
     <PageShell
-      title="Recipient Claim Flow"
-      description="Placeholder flow for recipients to claim a crypto payment with a secure token."
+      title="Claim your payment"
+      description="A payment has been sent to you via Bridgelet. Review the details below and claim it to your Stellar wallet."
     >
-      <dl className="space-y-4 text-sm text-slate-700">
-        <div>
-          <dt className="font-medium text-slate-900">Claim Token</dt>
-          <dd className="break-all">{token}</dd>
-        </div>
-        <div>
-          <dt className="font-medium text-slate-900">Support Contact</dt>
-          <dd>{publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL}</dd>
-        </div>
-      </dl>
+      <div className="space-y-6">
+        {/* Available state */}
+        <section aria-labelledby="available-heading">
+          <h2 id="available-heading" className="sr-only">Available payment</h2>
+          <ClaimStatusCard
+            status="available"
+            amountStroops="50000000"
+            assetCode="XLM"
+            expiresAt={demoExpiresAt}
+            memo="Invoice #42"
+            supportEmail={publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL}
+          />
+        </section>
+
+        <p className="text-xs text-slate-400 text-center">
+          Token:{' '}
+          <span className="font-mono break-all">{token}</span>
+        </p>
+
+        <SharePrompt appUrl={publicEnv.NEXT_PUBLIC_APP_URL} />
+      </div>
     </PageShell>
   );
 }
