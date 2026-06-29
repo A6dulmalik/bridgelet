@@ -8,7 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
     "generate:types": "node scripts/generate-types.mjs"
   },
   "dependencies": {
@@ -22,7 +22,7 @@
     "@chromatic-com/storybook": "^3.2.6",
     "@storybook/addon-a11y": "^8.6.12",
     "@storybook/addon-docs": "^8.6.12",
-    "@storybook/nextjs-vite": "^8.6.12",
+    "@storybook/nextjs": "^8.6.12",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
