@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { RateLimitBanner } from '@/components/rate-limit-banner';
 import { RateLimitError } from '@/lib/redeem';
+import { ChainSelector } from '@/components/chain-selector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,10 @@ function AvailablePanel({
       >
         {claiming ? 'Claiming…' : 'Claim now'}
       </button>
+
+      <div className="pt-2">
+        <ChainSelector />
+      </div>
 
       <p className="text-xs text-slate-500">
         Funds are held on-chain. Claiming transfers them directly to your Stellar wallet.
