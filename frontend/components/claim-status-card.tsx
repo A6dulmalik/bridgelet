@@ -5,7 +5,6 @@ import { RateLimitBanner } from '@/components/rate-limit-banner';
 import { RateLimitError } from '@/lib/redeem';
 import { ChainSelector } from '@/components/chain-selector';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ClaimStatus = 'available' | 'claimed' | 'expired';
 
@@ -142,7 +141,7 @@ function AvailablePanel({
         type="button"
         onClick={handleClaim}
         disabled={claiming}
-        className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-green-600"
+        className="w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
       >
         {claiming ? 'Claiming…' : 'Claim now'}
       </button>

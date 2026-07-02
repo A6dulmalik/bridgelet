@@ -10,7 +10,7 @@ export default meta;
 
 type Story = StoryObj<typeof ClaimStatusCard>;
 
-export const Available: Story = {
+export const Unclaimed: Story = {
   args: { status: 'available', amountStroops: '1000000000', assetCode: 'USDC', expiresAt: '2026-07-15T12:00:00Z' },
 };
 
