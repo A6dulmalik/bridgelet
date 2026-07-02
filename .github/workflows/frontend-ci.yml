@@ -33,6 +33,7 @@ jobs:
 
       - name: Detect package scripts
         id: pkg
+        working-directory: frontend
         run: |
           node -e '
           const fs = require("fs");
@@ -44,8 +45,7 @@ jobs:
             "has_build=" + ("build" in s),
             "has_test=" + ("test" in s)
           ].join("\n");
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
-        '
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");'
       - name: Run lint
         if: steps.pkg.outputs.has_lint == 'true'
         run: npm run lint
