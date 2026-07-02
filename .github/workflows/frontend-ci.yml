@@ -34,8 +34,18 @@ jobs:
       - name: Detect package scripts
         id: pkg
         run: |
-          node -e "const fs = require('fs'); const pkg = require('./frontend/package.json'); const s = pkg.scripts || {}; const out = [`has_lint=${'lint' in s}`, `has_type_check=${'type-check' in s}`, `has_build=${'build' in s}`, `has_test=${'test' in s}`].join('\n'); fs.appendFileSync(process.env.GITHUB_OUTPUT, out + '\n');"
-
+          node -e '
+          const fs = require("fs");
+          const pkg = require("./package.json");
+          const s = pkg.scripts || {};
+          const out = [
+            "has_lint=" + ("lint" in s),
+            "has_type_check=" + ("type-check" in s),
+            "has_build=" + ("build" in s),
+            "has_test=" + ("test" in s)
+          ].join("\n");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
+        '
       - name: Run lint
         if: steps.pkg.outputs.has_lint == 'true'
         run: npm run lint
