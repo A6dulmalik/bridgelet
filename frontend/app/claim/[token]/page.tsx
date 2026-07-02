@@ -4,8 +4,8 @@ import { ClaimStatusCard } from '@/components/claim-status-card';
 import { publicEnv } from '@/lib/env';
 
 type ClaimPageProps = {
-  params: Promise<{ token: string }>;
-};
+  params: { token: string }
+}
 
 /**
  * Claim page — resolves the token from the URL and renders the correct
@@ -50,5 +50,5 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
         <SharePrompt appUrl={publicEnv.NEXT_PUBLIC_APP_URL} />
       </div>
     </PageShell>
-  );
+  )
 }

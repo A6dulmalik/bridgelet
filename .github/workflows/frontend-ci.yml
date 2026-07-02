@@ -12,6 +12,9 @@ jobs:
   build-and-test:
     name: Lint, type-check, test, and build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - name: Checkout repository
@@ -49,6 +52,5 @@ jobs:
         working-directory: frontend
 
       - name: Build app
-        if: steps.pkg.outputs.has_build == 'true'
         run: npm run build
         working-directory: frontend

@@ -19,5 +19,5 @@ export const Claimed: Story = {
 };
 
 export const Expired: Story = {
-  args: { status: 'expired', expiresAt: '2026-06-01T00:00:00Z' },
+  args: { status: 'expired', expiresAt: '2026-06-01T00:00:00Z', supportEmail: 'support@bridgelet.com' },
 };
