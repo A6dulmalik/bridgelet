@@ -30,3 +30,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+- Added `docs/security-model.mdx` — re-authored security model in MDX with threat model table (15 threats, mitigations, and statuses) and explicit MVP stub callouts for stub sweep auth, missing encryption at rest, demo-only claim page, and absent CSP enforcement
