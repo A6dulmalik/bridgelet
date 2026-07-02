@@ -5,7 +5,6 @@ import { RateLimitBanner } from '@/components/rate-limit-banner';
 import { RateLimitError } from '@/lib/redeem';
 import { ChainSelector } from '@/components/chain-selector';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ClaimStatus = 'available' | 'claimed' | 'expired';
 
