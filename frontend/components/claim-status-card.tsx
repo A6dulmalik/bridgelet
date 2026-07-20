@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { RateLimitBanner } from '@/components/rate-limit-banner';
-import { RateLimitError } from '@/lib/redeem';
 import { ChainSelector } from '@/components/chain-selector';
 
 
@@ -85,11 +84,7 @@ function AvailablePanel({
       await onClaim?.();
       setDone(true);
     } catch (err) {
-      if (err instanceof RateLimitError) {
-        setRateLimit(err.retryAfter);
-      } else {
-        throw err;
-      }
+      cons
     } finally {
       setClaiming(false);
     }
