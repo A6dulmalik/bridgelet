@@ -1,11 +1,11 @@
 import { PageShell } from '@/components/page-shell';
 import { SharePrompt } from '@/components/share-prompt';
-import { ClaimStatusCard } from '@/components/claim-status-card';
+import { ClaimPageClient } from './claim-page-client';
 import { publicEnv } from '@/lib/env';
 import { AccountStatus } from '@/lib/api/types';
 
 type ClaimPageProps = {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 };
 
 /**
@@ -21,29 +21,13 @@ type ClaimPageProps = {
 export default async function ClaimPage({ params }: ClaimPageProps) {
   const { token } = await params;
 
-  // Demo data — replace with a real API fetch once /claim/:token is live.
-  const demoExpiresAt = new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString();
-
   return (
     <PageShell
       title="Claim your payment"
       description="A payment has been sent to you via Bridgelet. Review the details below and claim it to your Stellar wallet."
     >
       <div className="space-y-6">
-        {/* Available state */}
-        <section aria-labelledby="available-heading">
-          <h2 id="available-heading" className="sr-only">
-            Available payment
-          </h2>
-          <ClaimStatusCard
-            status={AccountStatus.PENDING_CLAIM}
-            amountStroops="50000000"
-            assetCode="XLM"
-            expiresAt={demoExpiresAt}
-            memo="Invoice #42"
-            supportEmail={publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL}
-          />
-        </section>
+        <ClaimPageClient token={token} supportEmail={publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL} />
 
         <p className="text-xs text-slate-400 text-center">
           Token: <span className="font-mono break-all">{token}</span>

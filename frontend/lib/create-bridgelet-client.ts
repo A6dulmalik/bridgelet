@@ -6,6 +6,7 @@ import type {
   RedeemClaimRequest,
   RedeemClaimResponse,
 } from '@/lib/bridgelet';
+import { ClaimView } from '@/app/claim/[token]/claim-page-client';
 
 export interface BridgeletClientOptions {
   /** Base URL of the bridgelet-sdk backend, used for the unguarded /claims/* routes. */
@@ -31,6 +32,25 @@ export class RateLimitError extends Error {
     );
     this.name = 'RateLimitError';
     this.retryAfter = retryAfter;
+  }
+}
+
+/**
+ * Thrown for any non-ok, non-429 response. Wraps the backend's `ApiError`
+ * envelope (`{ error, message, statusCode }`, see `@/lib/bridgelet`) in a
+ * real `Error` instance so callers can rely on `err.message` and
+ * `instanceof` checks instead of a raw, un-typed parsed body.
+ */
+export class BridgeletApiError extends Error {
+  readonly statusCode: number;
+  readonly error: string | undefined;
+
+  constructor(body: unknown, statusCode: number) {
+    const parsed = (body ?? {}) as { error?: string; message?: string };
+    super(parsed.message || `Request failed with status ${statusCode}.`);
+    this.name = 'BridgeletApiError';
+    this.statusCode = statusCode;
+    this.error = parsed.error;
   }
 }
 
@@ -102,7 +122,7 @@ export class BridgeletClient {
           continue;
         }
         const body = await response.json().catch(() => ({}));
-        throw body;
+        throw new BridgeletApiError(body, response.status);
       }
 
       return response.json() as Promise<T>;
@@ -139,7 +159,7 @@ export class BridgeletClient {
       body: JSON.stringify(body),
     });
   }
-  verifyClaim(claimToken: string): Promise<{ ok: boolean; claim: string }> {
+  verifyClaim(claimToken: string): Promise<ClaimView> {
     const body: VerifyClaimRequest = { claimToken };
     return this.request(`${this.baseUrl}/claims/verify`, {
       method: 'POST',
