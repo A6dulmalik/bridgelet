@@ -20,7 +20,12 @@ export function ChainSelector() {
         {/* Tooltip for the disabled state */}
         <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 w-max rounded bg-slate-800 px-2 py-1 text-xs text-white">
           More chains coming soon
-          <svg className="absolute top-full left-1/2 -translate-x-1/2 text-slate-800 h-2 w-2" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+          <svg
+            className="absolute top-full left-1/2 -translate-x-1/2 text-slate-800 h-2 w-2"
+            viewBox="0 0 255 255"
+          >
+            <polygon className="fill-current" points="0,0 127.5,127.5 255,0" />
+          </svg>
         </div>
       </div>
     </div>

@@ -41,10 +41,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       >
         <p className="font-medium text-green-800">Payment sent!</p>
         <p className="mt-1 text-sm text-green-700">
-          A claim link has been sent to <strong>{state.recipientEmail}</strong>. They have 24
-          hours to claim their funds.
+          A claim link has been sent to <strong>{state.recipientEmail}</strong>. They have 24 hours
+          to claim their funds.
         </p>
-        
+
         {isSupported && claimUrl && (
           <div className="mt-4 border-t border-green-200 pt-4">
             <button
@@ -53,7 +53,12 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
               className="inline-flex items-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-800 disabled:opacity-60"
             >
               <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
               {isWriting ? 'Ready to tap... hold tag to back of phone' : 'Write to NFC Tag'}
             </button>

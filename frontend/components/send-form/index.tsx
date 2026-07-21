@@ -82,11 +82,7 @@ export function SendForm() {
                 <span
                   aria-current={isCurrent ? 'step' : undefined}
                   className={`text-xs font-medium ${
-                    isCurrent
-                      ? 'text-slate-900'
-                      : isDone
-                        ? 'text-green-600'
-                        : 'text-slate-400'
+                    isCurrent ? 'text-slate-900' : isDone ? 'text-green-600' : 'text-slate-400'
                   }`}
                 >
                   {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -119,16 +115,9 @@ export function SendForm() {
         />
       )}
       {step === 'details' && (
-        <DetailsStep
-          state={formState}
-          onChange={updateState}
-          onBack={goBack}
-          onNext={goNext}
-        />
+        <DetailsStep state={formState} onChange={updateState} onBack={goBack} onNext={goNext} />
       )}
-      {step === 'confirm' && (
-        <ConfirmStep state={formState} onBack={goBack} />
-      )}
+      {step === 'confirm' && <ConfirmStep state={formState} onBack={goBack} />}
     </div>
   );
 }

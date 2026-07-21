@@ -62,8 +62,7 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
 
       <div>
         <label htmlFor="memo" className="block text-sm font-medium text-slate-900">
-          Memo{' '}
-          <span className="font-normal text-slate-500">(optional)</span>
+          Memo <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <input
           id="memo"

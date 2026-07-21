@@ -12,9 +12,7 @@ function fakeStellarAddress(): string {
 
 /** Generate a 32-byte hex claim token. */
 function fakeClaimToken(): string {
-  return Array.from({ length: 32 }, () =>
-    Math.floor(Math.random() * 16).toString(16),
-  ).join('');
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 }
 
 /**

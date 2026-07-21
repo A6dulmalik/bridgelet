@@ -11,7 +11,12 @@ export default meta;
 type Story = StoryObj<typeof ClaimStatusCard>;
 
 export const Unclaimed: Story = {
-  args: { status: 'available', amountStroops: '1000000000', assetCode: 'USDC', expiresAt: '2026-07-15T12:00:00Z' },
+  args: {
+    status: 'available',
+    amountStroops: '1000000000',
+    assetCode: 'USDC',
+    expiresAt: '2026-07-15T12:00:00Z',
+  },
 };
 
 export const Claimed: Story = {
@@ -19,5 +24,9 @@ export const Claimed: Story = {
 };
 
 export const Expired: Story = {
-  args: { status: 'expired', expiresAt: '2026-06-01T00:00:00Z', supportEmail: 'support@bridgelet.com' },
+  args: {
+    status: 'expired',
+    expiresAt: '2026-06-01T00:00:00Z',
+    supportEmail: 'support@bridgelet.com',
+  },
 };

@@ -1,13 +1,13 @@
-import freighter from "@stellar/freighter-api";
+import freighter from '@stellar/freighter-api';
 
-export type WalletType = "freighter" | "lobstr" | "generated";
+export type WalletType = 'freighter' | 'lobstr' | 'generated';
 
 export interface ConnectedWallet {
   publicKey: string;
   type: WalletType;
 }
 
-const STORAGE_KEY = "bridgelet_wallet";
+const STORAGE_KEY = 'bridgelet_wallet';
 
 // Save wallet to localStorage so it survives page refreshes
 export function persistWallet(wallet: ConnectedWallet): void {
@@ -34,7 +34,7 @@ export async function connectFreighter(): Promise<ConnectedWallet> {
   const isAvailable = await freighter.isConnected();
   if (!isAvailable) {
     throw new Error(
-      "Freighter extension not found. Please install it from freighter.app and refresh."
+      'Freighter extension not found. Please install it from freighter.app and refresh.',
     );
   }
 
@@ -43,10 +43,10 @@ export async function connectFreighter(): Promise<ConnectedWallet> {
 
   const { address } = await freighter.getAddress();
   if (!address) {
-    throw new Error("Freighter did not return a public key. Did you approve the request?");
+    throw new Error('Freighter did not return a public key. Did you approve the request?');
   }
 
-  return { publicKey: address, type: "freighter" };
+  return { publicKey: address, type: 'freighter' };
 }
 
 // LOBSTR is mobile-only, so on desktop we deeplink and poll for a result
@@ -56,7 +56,7 @@ export async function connectLobstr(): Promise<ConnectedWallet> {
   // LOBSTR doesn't have a JS SDK for web connection like Freighter does.
   // The flow here is: open LOBSTR, the user copies their public key, pastes it back.
   // This function returns a placeholder — the UI handles the paste step.
-  throw new Error("USE_PASTE_FLOW");
+  throw new Error('USE_PASTE_FLOW');
 }
 
 // Generate a brand-new Stellar keypair for users who have no wallet at all
@@ -65,10 +65,10 @@ export async function generateNewWallet(): Promise<{
   secretKey: string;
 }> {
   // We use the Stellar SDK dynamically to avoid SSR issues
-  const { Keypair } = await import("@stellar/stellar-sdk");
+  const { Keypair } = await import('@stellar/stellar-sdk');
   const keypair = Keypair.random();
   return {
-    wallet: { publicKey: keypair.publicKey(), type: "generated" },
+    wallet: { publicKey: keypair.publicKey(), type: 'generated' },
     secretKey: keypair.secret(),
   };
 }
