@@ -15,6 +15,7 @@ export interface CreateAccountRequest {
   metadata?: Record<string, unknown>;
 }
 
+export type AccountStatus = 'pending' | 'claimed' | 'expired';
 
 /** Response from POST /send */
 export interface AccountResponse {
@@ -65,15 +66,9 @@ export interface ApiError {
   statusCode: number;
 }
 
-import {
-  BridgeletClient,
-  type BridgeletClientOptions,
-} from '@/lib/create-bridgelet-client';
+import { BridgeletClient, type BridgeletClientOptions } from '@/lib/create-bridgelet-client';
 
-export {
-  BridgeletClient,
-  type BridgeletClientOptions,
-};
+export { BridgeletClient, type BridgeletClientOptions };
 
 let _defaultClient: BridgeletClient | null = null;
 
@@ -84,19 +79,9 @@ function defaultClient(): BridgeletClient {
   return _defaultClient;
 }
 
-export function getClaimDetails(token: string): Promise<ClaimDetailsResponse> {
-  return defaultClient().getClaimDetails(token);
-}
-
-export function createPaymentIntent(
-  data: CreatePaymentIntentRequest,
-): Promise<CreatePaymentIntentResponse> {
-  return defaultClient().createPaymentIntent(data);
-}
-
 export function redeemClaim(
   token: string,
-  data: RedeemClaimRequest,
+  destinationAddress: string,
 ): Promise<RedeemClaimResponse> {
-  return defaultClient().redeemClaim(token, data);
+  return defaultClient().redeemClaim(token, destinationAddress);
 }

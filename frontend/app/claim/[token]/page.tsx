@@ -4,8 +4,8 @@ import { ClaimStatusCard } from '@/components/claim-status-card';
 import { publicEnv } from '@/lib/env';
 
 type ClaimPageProps = {
-  params: { token: string }
-}
+  params: { token: string };
+};
 
 /**
  * Claim page — resolves the token from the URL and renders the correct
@@ -31,7 +31,9 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
       <div className="space-y-6">
         {/* Available state */}
         <section aria-labelledby="available-heading">
-          <h2 id="available-heading" className="sr-only">Available payment</h2>
+          <h2 id="available-heading" className="sr-only">
+            Available payment
+          </h2>
           <ClaimStatusCard
             status="available"
             amountStroops="50000000"
@@ -43,12 +45,11 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
         </section>
 
         <p className="text-xs text-slate-400 text-center">
-          Token:{' '}
-          <span className="font-mono break-all">{token}</span>
+          Token: <span className="font-mono break-all">{token}</span>
         </p>
 
         <SharePrompt appUrl={publicEnv.NEXT_PUBLIC_APP_URL} />
       </div>
     </PageShell>
-  )
+  );
 }

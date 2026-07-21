@@ -2,7 +2,7 @@ import { fetchWithTimeout, RequestTimeoutError } from '@/lib/fetch-with-timeout'
 import type {
   CreateAccountRequest,
   AccountResponse,
-  // VerifyClaimRequest,
+  VerifyClaimRequest,
   RedeemClaimRequest,
   RedeemClaimResponse,
 } from '@/lib/bridgelet';
@@ -69,10 +69,7 @@ export class BridgeletClient {
     this.maxDelayMs = options.maxDelayMs ?? 30_000;
   }
 
-  private async request<T>(
-    url: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  private async request<T>(url: string, options: RequestInit = {}): Promise<T> {
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
 
@@ -138,6 +135,13 @@ export class BridgeletClient {
   redeemClaim(claimToken: string, destinationAddress: string): Promise<RedeemClaimResponse> {
     const body: RedeemClaimRequest = { claimToken, destinationAddress };
     return this.request<RedeemClaimResponse>(`${this.baseUrl}/claims/redeem`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+  verifyClaim(claimToken: string): Promise<{ ok: boolean; claim: string }> {
+    const body: VerifyClaimRequest = { claimToken };
+    return this.request(`${this.baseUrl}/claims/verify`, {
       method: 'POST',
       body: JSON.stringify(body),
     });

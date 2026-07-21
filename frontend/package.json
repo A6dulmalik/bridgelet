@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "generate:types": "node scripts/generate-types.mjs"
+    "generate:types": "node scripts/generate-types.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@stellar/freighter-api": "^6.0.1",
@@ -20,11 +22,13 @@
   "devDependencies": {
     "@storybook/nextjs-vite": "^10.4.6",
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "msw": "^2.0.0",
     "openapi-typescript": "^7.0.0",
+    "prettier": "3.9.5",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^6.3.5"

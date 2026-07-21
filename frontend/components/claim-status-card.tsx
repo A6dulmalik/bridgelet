@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { RateLimitBanner } from '@/components/rate-limit-banner';
 import { ChainSelector } from '@/components/chain-selector';
 
-
 export type ClaimStatus = 'available' | 'claimed' | 'expired';
 
 export interface ClaimStatusCardProps {
@@ -51,12 +50,14 @@ function formatExpiry(iso: string): string {
 function StatusBadge({ status }: { status: ClaimStatus }) {
   const styles: Record<ClaimStatus, { dot: string; text: string; label: string }> = {
     available: { dot: 'bg-green-500', text: 'text-green-700', label: 'Available' },
-    claimed:   { dot: 'bg-blue-500',  text: 'text-blue-700',  label: 'Claimed'   },
-    expired:   { dot: 'bg-red-500',   text: 'text-red-700',   label: 'Expired'   },
+    claimed: { dot: 'bg-blue-500', text: 'text-blue-700', label: 'Claimed' },
+    expired: { dot: 'bg-red-500', text: 'text-red-700', label: 'Expired' },
   };
   const { dot, text, label } = styles[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${text}`}
+    >
       <span className={`inline-block h-2 w-2 rounded-full ${dot}`} aria-hidden="true" />
       {label}
     </span>
@@ -72,7 +73,10 @@ function AvailablePanel({
   memo,
   onClaim,
   sweepNote,
-}: Pick<ClaimStatusCardProps, 'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'>) {
+}: Pick<
+  ClaimStatusCardProps,
+  'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'
+>) {
   const [claiming, setClaiming] = useState(false);
   const [done, setDone] = useState(false);
   const [rateLimit, setRateLimit] = useState<number | null | undefined>(undefined);
@@ -84,7 +88,7 @@ function AvailablePanel({
       await onClaim?.();
       setDone(true);
     } catch (err) {
-      cons
+      console.log(err);
     } finally {
       setClaiming(false);
     }
@@ -111,9 +115,11 @@ function AvailablePanel({
         <div className="flex justify-between">
           <dt className="font-medium text-slate-700">Amount</dt>
           <dd className="font-semibold text-slate-900">
-            {amountStroops
-              ? stroopsToDisplay(amountStroops, assetCode)
-              : <span className="text-slate-400">—</span>}
+            {amountStroops ? (
+              stroopsToDisplay(amountStroops, assetCode)
+            ) : (
+              <span className="text-slate-400">—</span>
+            )}
           </dd>
         </div>
         {expiresAt && (
@@ -164,13 +170,17 @@ function ClaimedPanel() {
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <div>
           <p className="text-sm font-semibold text-blue-800">Payment already claimed</p>
           <p className="text-xs text-blue-600 mt-0.5">
-            These funds have been transferred to the recipient&apos;s wallet. Each claim link
-            can only be used once.
+            These funds have been transferred to the recipient&apos;s wallet. Each claim link can
+            only be used once.
           </p>
         </div>
       </div>
@@ -196,14 +206,16 @@ function ExpiredPanel({
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
         </svg>
         <div>
           <p className="text-sm font-semibold text-red-800">This claim link has expired</p>
           {expiresAt && (
-            <p className="text-xs text-red-600 mt-0.5">
-              Expired on {formatExpiry(expiresAt)}.
-            </p>
+            <p className="text-xs text-red-600 mt-0.5">Expired on {formatExpiry(expiresAt)}.</p>
           )}
         </div>
       </div>
@@ -251,14 +263,14 @@ export function ClaimStatusCard({
 }: ClaimStatusCardProps) {
   const headers: Record<ClaimStatus, string> = {
     available: 'You have a payment waiting',
-    claimed:   'Payment already claimed',
-    expired:   'Payment link expired',
+    claimed: 'Payment already claimed',
+    expired: 'Payment link expired',
   };
 
   const borderColors: Record<ClaimStatus, string> = {
     available: 'border-green-200',
-    claimed:   'border-blue-200',
-    expired:   'border-red-200',
+    claimed: 'border-blue-200',
+    expired: 'border-red-200',
   };
 
   return (
@@ -287,9 +299,7 @@ export function ClaimStatusCard({
         />
       )}
       {status === 'claimed' && <ClaimedPanel />}
-      {status === 'expired' && (
-        <ExpiredPanel expiresAt={expiresAt} supportEmail={supportEmail} />
-      )}
+      {status === 'expired' && <ExpiredPanel expiresAt={expiresAt} supportEmail={supportEmail} />}
     </article>
   );
 }

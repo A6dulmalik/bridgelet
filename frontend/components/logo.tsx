@@ -9,10 +9,27 @@ export default function Logo({ className = 'w-10 h-10' }: { className?: string }
       </defs>
 
       {/* Dashed ring: ephemeral account */}
-      <circle cx="40" cy="64" r="26" stroke="#6C63FF" strokeWidth="8" strokeDasharray="10 8" fill="none" strokeLinecap="round" />
+      <circle
+        cx="40"
+        cy="64"
+        r="26"
+        stroke="#6C63FF"
+        strokeWidth="8"
+        strokeDasharray="10 8"
+        fill="none"
+        strokeLinecap="round"
+      />
 
       {/* Arrow connector */}
-      <line x1="68" y1="64" x2="88" y2="64" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+      <line
+        x1="68"
+        y1="64"
+        x2="88"
+        y2="64"
+        stroke="#38BDF8"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
 
       {/* Solid ring: permanent wallet */}
       <circle cx="100" cy="64" r="18" fill="#6C63FF" />
