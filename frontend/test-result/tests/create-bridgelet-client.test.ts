@@ -1,8 +1,16 @@
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+} from 'vitest';
 import { BridgeletClient } from '../../lib/create-bridgelet-client';
 import { fetchWithTimeout, RequestTimeoutError } from '../../lib/fetch-with-timeout';
 
-jest.mock('../../lib/fetch-with-timeout', () => ({
-  fetchWithTimeout: jest.fn(),
+vi.mock('../../lib/fetch-with-timeout', () => ({
+  fetchWithTimeout: vi.fn(),
   RequestTimeoutError: class RequestTimeoutError extends Error {
     constructor() {
       super('The request timed out. Please try again.');
@@ -12,15 +20,15 @@ jest.mock('../../lib/fetch-with-timeout', () => ({
 }));
 
 describe('BridgeletClient', () => {
-  const mockedFetchWithTimeout = fetchWithTimeout as jest.MockedFunction<typeof fetchWithTimeout>;
+  const mockedFetchWithTimeout = vi.mocked(fetchWithTimeout);
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(Math, 'random').mockReturnValue(0);
+    vi.clearAllMocks();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('posts account creation through the internal app route', async () => {
@@ -113,7 +121,7 @@ describe('BridgeletClient', () => {
       ok: false,
       status: 429,
       headers: new Headers({ 'Retry-After': '5' }),
-      json: jest.fn(),
+      json: vi.fn(),
     } as unknown as Response);
 
     const client = new BridgeletClient({ baseUrl: 'https://sdk.example.com' });
