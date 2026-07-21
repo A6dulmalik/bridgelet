@@ -3,6 +3,26 @@
 import { useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
+import { BridgeletApiClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
+
+/**
+ * Default claim window for accounts created from the send form.
+ * CreateAccountRequest.expiresIn is required by the backend (min 3600,
+ * max 2592000 seconds) but SendFormState has no UI for choosing it yet —
+ * 24h matches the copy already shown to the sender below ("They have 24
+ * hours to claim their funds"). Surfacing this as a user-editable option
+ * is a follow-up UX decision, not part of this wiring fix.
+ */
+const DEFAULT_EXPIRES_IN_SECONDS = 24 * 60 * 60;
+
+const client = new BridgeletApiClient();
+
+function errorMessage(err: unknown): string {
+  if (err instanceof RateLimitError) return err.message;
+  if (err instanceof BridgeletApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return 'Something went wrong.';
+}
 
 type ConfirmStepProps = {
   state: SendFormState;
@@ -20,13 +40,30 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     setSubmitting(true);
     setError(null);
     try {
-      // Placeholder: wire up to POST /api/accounts + POST /send in a real impl.
-      await new Promise((res) => setTimeout(res, 800));
-      // Set a mock claim URL for the NFC experiment since the backend isn't wired
-      setClaimUrl('https://bridgelet.example.com/claim/mock-token-123');
+      const account = await client.createAccount({
+        fundingSource: state.publicKey,
+        // No dedicated recovery-address field in the send form yet — funds
+        // return to the sender's own wallet if the claim window expires.
+        recovery_address: state.publicKey,
+        amount: state.amountXlm,
+        asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
+        expiresIn: DEFAULT_EXPIRES_IN_SECONDS,
+        metadata: {
+          recipientEmail: state.recipientEmail,
+          memo: state.memo || undefined,
+        },
+      });
+
+      if (!account.claimUrl) {
+        throw new Error(
+          'Account was created but no claim link was returned. Please contact support.',
+        );
+      }
+
+      setClaimUrl(account.claimUrl);
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(errorMessage(err));
     } finally {
       setSubmitting(false);
     }
