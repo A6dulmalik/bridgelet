@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { ClaimStatusCard } from '@/components/claim-status-card';
 import { AccountStatus } from '@/lib/api/types';
-import { BridgeletApiClient, BridgeletApiError } from '@/lib/api/client';
+import { BridgeletClient, BridgeletApiError } from '@/lib/api/client';
 
 interface ClaimPageClientProps {
   token: string;
   supportEmail: string;
 }
 
-interface ClaimView {
+export interface ClaimView {
   status: AccountStatus;
   amountStroops?: string;
   assetCode?: string;
@@ -18,13 +18,14 @@ interface ClaimView {
   sweepNote?: string;
 }
 
-const client = new BridgeletApiClient();
+const client = new BridgeletClient();
 
 /**
  * Decimal-string amount (e.g. "100.0000000") -> stroops string, for display
  * via ClaimStatusCard's existing stroops-based formatter.
  */
 function toStroops(decimalAmount: string): string {
+  if (!decimalAmount) return '0';
   const num = parseFloat(decimalAmount);
   if (Number.isNaN(num)) return '0';
   return String(Math.round(num * 10_000_000));
@@ -39,11 +40,11 @@ function toStroops(decimalAmount: string): string {
  */
 async function loadClaimView(claimToken: string): Promise<ClaimView> {
   try {
-    const result = await client.verifyClaim({ claimToken });
+    const result = await client.verifyClaim(claimToken);
     return {
       status: AccountStatus.PENDING_CLAIM,
-      amountStroops: toStroops(result.amount),
-      assetCode: result.asset === 'native' ? 'XLM' : result.asset,
+      amountStroops: toStroops(result.amountStroops ?? '0'),
+      assetCode: result.assetCode === 'native' ? 'XLM' : result.assetCode,
       expiresAt: result.expiresAt,
     };
   } catch (err) {
@@ -75,7 +76,7 @@ export function ClaimPageClient({ token, supportEmail }: ClaimPageClientProps) {
   }, [token]);
 
   async function handleClaim(destinationAddress: string) {
-    const result = await client.redeemClaim({ claimToken: token, destinationAddress });
+    const result = await client.redeemClaim(token, destinationAddress);
     if (!result.success) {
       throw new Error(result.error ?? 'Claim could not be completed. Please try again.');
     }

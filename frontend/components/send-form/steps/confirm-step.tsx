@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
-import { BridgeletApiClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
+import { BridgeletClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -15,7 +15,7 @@ import { BridgeletApiClient, RateLimitError, BridgeletApiError } from '@/lib/api
  */
 const DEFAULT_EXPIRES_IN_SECONDS = 24 * 60 * 60;
 
-const client = new BridgeletApiClient();
+const client = new BridgeletClient();
 
 function errorMessage(err: unknown): string {
   if (err instanceof RateLimitError) return err.message;
