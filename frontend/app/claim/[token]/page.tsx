@@ -2,6 +2,7 @@ import { PageShell } from '@/components/page-shell';
 import { SharePrompt } from '@/components/share-prompt';
 import { ClaimStatusCard } from '@/components/claim-status-card';
 import { publicEnv } from '@/lib/env';
+import { AccountStatus } from '@/lib/api/types';
 
 type ClaimPageProps = {
   params: { token: string };
@@ -35,7 +36,7 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
             Available payment
           </h2>
           <ClaimStatusCard
-            status="available"
+            status={AccountStatus.PENDING_CLAIM}
             amountStroops="50000000"
             assetCode="XLM"
             expiresAt={demoExpiresAt}

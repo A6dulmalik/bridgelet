@@ -78,9 +78,21 @@ const BORDER_COLORS: Record<ClaimStatus, string> = {
 };
 
 const BADGE_STYLES: Record<ClaimStatus, { dot: string; text: string; label: string }> = {
-  [AccountStatus.INITIALIZING]: { dot: 'bg-slate-400', text: 'text-slate-600', label: 'Setting up' },
-  [AccountStatus.PENDING_PAYMENT]: { dot: 'bg-amber-500', text: 'text-amber-700', label: 'Awaiting payment' },
-  [AccountStatus.PENDING_CLAIM]: { dot: 'bg-green-500', text: 'text-green-700', label: 'Available' },
+  [AccountStatus.INITIALIZING]: {
+    dot: 'bg-slate-400',
+    text: 'text-slate-600',
+    label: 'Setting up',
+  },
+  [AccountStatus.PENDING_PAYMENT]: {
+    dot: 'bg-amber-500',
+    text: 'text-amber-700',
+    label: 'Awaiting payment',
+  },
+  [AccountStatus.PENDING_CLAIM]: {
+    dot: 'bg-green-500',
+    text: 'text-green-700',
+    label: 'Available',
+  },
   [AccountStatus.CLAIMING]: { dot: 'bg-blue-500', text: 'text-blue-700', label: 'Processing' },
   [AccountStatus.PARTIAL_SWEEP]: { dot: 'bg-blue-500', text: 'text-blue-700', label: 'Processing' },
   [AccountStatus.CLAIMED]: { dot: 'bg-blue-500', text: 'text-blue-700', label: 'Claimed' },
@@ -91,7 +103,9 @@ const BADGE_STYLES: Record<ClaimStatus, { dot: string; text: string; label: stri
 function StatusBadge({ status }: { status: ClaimStatus }) {
   const { dot, text, label } = BADGE_STYLES[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${text}`}
+    >
       <span className={`inline-block h-2 w-2 rounded-full ${dot}`} aria-hidden="true" />
       {label}
     </span>
@@ -107,10 +121,14 @@ function AvailablePanel({
   memo,
   onClaim,
   sweepNote,
-}: Pick<ClaimStatusCardProps, 'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'>) {
+}: Pick<
+  ClaimStatusCardProps,
+  'amountStroops' | 'assetCode' | 'expiresAt' | 'memo' | 'onClaim' | 'sweepNote'
+>) {
   const [claiming, setClaiming] = useState(false);
   const [done, setDone] = useState(false);
   const [rateLimit, setRateLimit] = useState<number | null | undefined>(undefined);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const [destinationAddress, setDestinationAddress] = useState('');
 
   // Matches the backend's Stellar public key validation (StrKey ed25519 public keys).
@@ -120,6 +138,7 @@ function AvailablePanel({
     if (!isValidAddress) return;
     setClaiming(true);
     setRateLimit(undefined);
+    setClaimError(null);
     try {
       await onClaim?.(destinationAddress);
       setDone(true);
@@ -127,7 +146,14 @@ function AvailablePanel({
       if (err instanceof RateLimitError) {
         setRateLimit(err.retryAfter);
       } else {
-        throw err;
+        // `handleClaim` is wired up as `onClick={handleClaim}` directly, so
+        // nothing awaits or catches this async function's own returned
+        // promise. Rethrowing here would just become an unhandled
+        // rejection with no user-visible feedback — surface it in state
+        // instead.
+        setClaimError(
+          err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        );
       }
     } finally {
       setClaiming(false);
@@ -155,9 +181,11 @@ function AvailablePanel({
         <div className="flex justify-between">
           <dt className="font-medium text-slate-700">Amount</dt>
           <dd className="font-semibold text-slate-900">
-            {amountStroops
-              ? stroopsToDisplay(amountStroops, assetCode)
-              : <span className="text-slate-400">—</span>}
+            {amountStroops ? (
+              stroopsToDisplay(amountStroops, assetCode)
+            ) : (
+              <span className="text-slate-400">—</span>
+            )}
           </dd>
         </div>
         {expiresAt && (
@@ -175,9 +203,20 @@ function AvailablePanel({
       </dl>
 
       {rateLimit !== undefined && <RateLimitBanner retryAfter={rateLimit} />}
+      {claimError && (
+        <p
+          role="alert"
+          className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2"
+        >
+          {claimError}
+        </p>
+      )}
 
       <div>
-        <label htmlFor="destination-address" className="mb-1 block text-xs font-medium text-slate-700">
+        <label
+          htmlFor="destination-address"
+          className="mb-1 block text-xs font-medium text-slate-700"
+        >
           Your Stellar wallet address
         </label>
         <input
@@ -269,13 +308,17 @@ function ClaimedPanel() {
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <div>
           <p className="text-sm font-semibold text-blue-800">Payment already claimed</p>
           <p className="text-xs text-blue-600 mt-0.5">
-            These funds have been transferred to the recipient&apos;s wallet. Each claim link
-            can only be used once.
+            These funds have been transferred to the recipient&apos;s wallet. Each claim link can
+            only be used once.
           </p>
         </div>
       </div>
@@ -301,14 +344,16 @@ function ExpiredPanel({
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
         </svg>
         <div>
           <p className="text-sm font-semibold text-red-800">This claim link has expired</p>
           {expiresAt && (
-            <p className="text-xs text-red-600 mt-0.5">
-              Expired on {formatExpiry(expiresAt)}.
-            </p>
+            <p className="text-xs text-red-600 mt-0.5">Expired on {formatExpiry(expiresAt)}.</p>
           )}
         </div>
       </div>
@@ -321,7 +366,7 @@ function ExpiredPanel({
           {supportEmail && (
             <li>
               Need help?{' '}
-              
+              <a
                 href={`mailto:${supportEmail}`}
                 className="underline underline-offset-2 hover:text-slate-900"
               >
@@ -347,22 +392,24 @@ function FailedPanel({ supportEmail }: Pick<ClaimStatusCardProps, 'supportEmail'
           stroke="currentColor"
           strokeWidth={2}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <div>
-          <p className="text-sm font-semibold text-red-800">
-            This payment couldn&apos;t be set up
-          </p>
+          <p className="text-sm font-semibold text-red-800">This payment couldn&apos;t be set up</p>
           <p className="text-xs text-red-600 mt-0.5">
-            Something went wrong while creating or funding this payment. It has not been
-            claimed and no funds have moved.
+            Something went wrong while creating or funding this payment. It has not been claimed and
+            no funds have moved.
           </p>
         </div>
       </div>
       {supportEmail && (
         <p className="text-xs text-slate-500">
           Contact the sender, or reach us at{' '}
-          
+          <a
             href={`mailto:${supportEmail}`}
             className="underline underline-offset-2 hover:text-slate-900"
           >
