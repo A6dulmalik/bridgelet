@@ -88,7 +88,7 @@ npm run dev
 The application will be available at `http://localhost:3000`. 
 
 #### Core Pages:
-- `/` — Homepage & Explainer
+- `/` — Homepage & animated How It Works explainer
 - `/send` — Sender Flow (Create ephemeral account)
 - `/claim/[token]` — Recipient Flow (Direct claim redemption)
 
