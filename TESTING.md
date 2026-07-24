@@ -43,7 +43,7 @@ The table below maps each part of the codebase to the testing tools and the curr
 |---|---|---|---|
 | Frontend components | Vitest + React Testing Library | Unit / component rendering | 🔲 Planned |
 | Frontend API layer | MSW v2 | Network mock in dev and tests | ✅ Mock handlers implemented |
-| Frontend E2E flows | Playwright | Full browser user journeys | 🔲 Planned |
+| Frontend E2E flows | Playwright | Full browser user journeys | ✅ Configured (smoke suite) |
 | Frontend visual regression | Storybook + Chromatic | Component story snapshots | 🔲 Planned |
 | Frontend performance | Lighthouse CI | Core Web Vitals, accessibility score | 🔲 Planned |
 | Mobile unit tests | Jest + jest-expo | Component and utility logic | ⚠️ Runner configured, no test files yet |
@@ -210,121 +210,64 @@ npm run test:coverage
 
 ### Playwright E2E Tests
 
-Playwright drives a real browser against the running Next.js dev or preview server. Use it for critical user journeys: sender flow, claim flow, and error paths.
+Playwright drives a real browser against `http://localhost:3000`. Use it for critical user journeys: navigation, sender flow, claim flow, and error paths.
 
-#### Setup
+#### Location
+
+| Path | Purpose |
+|---|---|
+| `frontend/playwright.config.ts` | Base config (`baseURL` → `localhost:3000`) |
+| `frontend/e2e/*.spec.ts` | Browser specs (smoke suite today) |
+| `docs/testing/E2E_GUIDELINES.md` | Selector and isolation standards |
+
+#### One-time browser install
 
 ```bash
 cd frontend
-npm install --save-dev @playwright/test
 npx playwright install --with-deps chromium
-```
-
-Create `frontend/playwright.config.ts`:
-
-```ts
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? 'github' : 'list',
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-  },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
-  ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
-});
-```
-
-#### Writing tests
-
-Place test files in `frontend/e2e/`. MSW service worker is active in the dev server, so network calls are intercepted automatically.
-
-```ts
-// e2e/send-flow.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('sender can complete the send form', async ({ page }) => {
-  await page.goto('/send');
-
-  // connect wallet step
-  await page.getByRole('button', { name: /connect wallet/i }).click();
-  await expect(page.getByText(/wallet connected/i)).toBeVisible();
-
-  // fill details
-  await page.getByLabel('Amount').fill('10');
-  await page.getByRole('button', { name: /continue/i }).click();
-
-  // confirm step
-  await expect(page.getByText(/confirm/i)).toBeVisible();
-  await page.getByRole('button', { name: /send/i }).click();
-
-  // share prompt
-  await expect(page.getByText(/share this link/i)).toBeVisible();
-});
-```
-
-```ts
-// e2e/claim-flow.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('recipient can claim funds with a valid token', async ({ page }) => {
-  await page.goto('/claim/abc123mock');
-  await expect(page.getByRole('heading', { name: /claim/i })).toBeVisible();
-  await page.getByRole('button', { name: /claim funds/i }).click();
-  await expect(page.getByText(/success/i)).toBeVisible();
-});
 ```
 
 #### Running Playwright tests
 
 ```bash
-# Headless (CI-style)
-npx playwright test
+cd frontend
+
+# Headless — starts `next dev` automatically (or reuses a running server)
+npm run test:e2e
 
 # Interactive UI mode
-npx playwright test --ui
+npm run test:e2e:ui
 
 # Single file
-npx playwright test e2e/send-flow.spec.ts
+npx playwright test e2e/home.spec.ts
 
 # Debug mode (pauses on each step)
 npx playwright test --debug
 ```
 
-Add to `frontend/package.json`:
+Locally, `webServer` runs `npm run dev` and reuses an existing server when present. In CI (`CI=true`), it runs `npm run start` against the **built** Next.js app (the workflow runs `npm run build` first).
 
-```json
-"scripts": {
-  "test:e2e": "playwright test",
-  "test:e2e:ui": "playwright test --ui"
-}
+#### Writing tests
+
+Place new specs in `frontend/e2e/`. Prefer role/label/`data-testid` selectors over CSS classes — see [E2E Guidelines](docs/testing/E2E_GUIDELINES.md).
+
+```ts
+// e2e/home.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('loads the homepage', async ({ page }) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: /bridgelet payment flows/i }),
+  ).toBeVisible();
+});
 ```
+
+Deeper send/claim journeys that depend on wallets or the API should stay deterministic (mocked routes or sandbox pages) so CI does not hit live Stellar.
 
 #### CI integration
 
-The existing `frontend-ci.yml` workflow will pick up `test:e2e` once it is added to the `test` script, or add a dedicated job:
-
-```yaml
-- name: Install Playwright browsers
-  run: npx playwright install --with-deps chromium
-  working-directory: frontend
-
-- name: Run E2E tests
-  run: npm run test:e2e
-  working-directory: frontend
-```
+`.github/workflows/frontend-ci.yml` builds the app, installs Chromium, then runs `npm run test:e2e` with `CI=true` so Playwright serves the production build via `next start`. On failure, the Playwright HTML report is uploaded as an artifact.
 
 ---
 
@@ -761,15 +704,19 @@ E2E tests require a complete environment:
 ### Running E2E Tests
 
 ```bash
-# Start the backend in test mode
-npm run start:test
+cd frontend
 
-# In another terminal, run E2E tests
+# One-time: install Chromium for Playwright
+npx playwright install --with-deps chromium
+
+# Run the smoke suite (starts Next.js automatically)
 npm run test:e2e
 
-# Run specific E2E test
-npm run test:e2e -- claim-flow.spec.ts
+# Run a specific file
+npm run test:e2e -- e2e/home.spec.ts
 ```
+
+For full-stack journeys that need the SDK backend and Stellar testnet, start those services separately and keep browser specs deterministic (mocks/sandbox routes). See [Playwright E2E Tests](#playwright-e2e-tests) and [docs/testing/E2E_GUIDELINES.md](docs/testing/E2E_GUIDELINES.md).
 
 ## Testing Against Live Testnet
 

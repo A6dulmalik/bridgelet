@@ -45,6 +45,19 @@ Reference Next.js UI for initiating and claiming crypto payments.
   npm run typecheck
   ```
 
+- Unit tests:
+
+  ```bash
+  npm test
+  ```
+
+- E2E tests (Playwright → `http://localhost:3000`):
+
+  ```bash
+  npx playwright install chromium   # one-time
+  npm run test:e2e
+  ```
+
 - Production build:
 
   ```bash
