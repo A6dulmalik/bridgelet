@@ -4,10 +4,13 @@ import { useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
+import { isFreighterTransactionSigningAvailable, signFreighterTransaction } from '@/lib/wallet';
 import {
-  isFreighterTransactionSigningAvailable,
-  signFreighterTransaction,
-} from '@/lib/wallet';
+  classifyAccountCreationError,
+  AccountCreationErrorCode,
+  type AccountCreationErrorInfo,
+} from '@/lib/account-errors';
+import { publicEnv } from '@/lib/env';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -18,14 +21,20 @@ import {
  * is a follow-up UX decision, not part of this wiring fix.
  */
 const DEFAULT_EXPIRES_IN_SECONDS = 24 * 60 * 60;
+const MAX_RETRIES = 3;
 
 const client = new BridgeletClient();
 
-function errorMessage(err: unknown): string {
-  if (err instanceof RateLimitError) return err.message;
-  if (err instanceof BridgeletApiError) return err.message;
-  if (err instanceof Error) return err.message;
-  return 'Something went wrong.';
+function classifyError(err: unknown): AccountCreationErrorInfo {
+  if (err instanceof RateLimitError) {
+    return {
+      code: AccountCreationErrorCode.RATE_LIMITED,
+      userMessage: err.message,
+      retryable: true,
+      suggestion: 'Please wait before retrying.',
+    };
+  }
+  return classifyAccountCreationError(err);
 }
 
 type ConfirmStepProps = {
@@ -36,15 +45,15 @@ type ConfirmStepProps = {
 export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<AccountCreationErrorInfo | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
 
   function buildCreateAccountPayload() {
     return {
       fundingSource: state.publicKey,
-      // No dedicated recovery-address field in the send form yet — funds
-      // return to the sender's own wallet if the claim window expires.
       recovery_address: state.publicKey,
       amount: state.amountXlm,
       asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
@@ -69,9 +78,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     );
   }
 
-  async function handleConfirm() {
+  async function executeCreateAccount(attempt: number) {
     setSubmitting(true);
-    setError(null);
+    setErrorInfo(null);
+    setRetryAfter(null);
     try {
       const payload = buildCreateAccountPayload();
 
@@ -96,7 +106,6 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           throw err;
         }
 
-        // Experimental endpoint may not exist in all environments yet.
         account = await client.createAccount(payload);
       }
 
@@ -109,10 +118,27 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       setClaimUrl(account.claimUrl);
       setSubmitted(true);
     } catch (err) {
-      setError(errorMessage(err));
+      const info = classifyError(err);
+      setErrorInfo(info);
+      if (err instanceof RateLimitError) {
+        setRetryAfter(err.retryAfter);
+      } else {
+        setRetryAfter(null);
+      }
+      setRetryCount(attempt);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleConfirm() {
+    executeCreateAccount(1);
+  }
+
+  function handleRetry() {
+    const nextAttempt = retryCount + 1;
+    if (nextAttempt > MAX_RETRIES) return;
+    executeCreateAccount(nextAttempt);
   }
 
   if (submitted) {
@@ -152,6 +178,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     );
   }
 
+  const canRetry = errorInfo !== null && errorInfo.retryable && retryCount < MAX_RETRIES;
+
+  const supportEmail = publicEnv.NEXT_PUBLIC_SUPPORT_EMAIL;
+
   return (
     <div className="space-y-4">
       <dl className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
@@ -179,10 +209,34 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
         )}
       </dl>
 
-      {error && (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
-        </p>
+      {errorInfo && (
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start">
+            <svg
+              className="mr-2 h-5 w-5 shrink-0 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800">{errorInfo.userMessage}</p>
+              <p className="mt-1 text-sm text-red-700">{errorInfo.suggestion}</p>
+              {retryAfter !== null && (
+                <p className="mt-1 text-xs text-red-600">
+                  Please wait {retryAfter} second{retryAfter !== 1 ? 's' : ''} before retrying.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="flex gap-3">
@@ -194,15 +248,39 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
         >
           Back
         </button>
-        <button
-          type="button"
-          onClick={handleConfirm}
-          disabled={submitting}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
-        >
-          {submitting ? 'Sending…' : 'Confirm & Send'}
-        </button>
+        {errorInfo && canRetry ? (
+          <button
+            type="button"
+            onClick={handleRetry}
+            disabled={submitting}
+            className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:opacity-60"
+          >
+            {submitting ? 'Retrying…' : `Try Again (${MAX_RETRIES - retryCount} left)`}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={submitting}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+          >
+            {submitting ? 'Sending…' : 'Confirm & Send'}
+          </button>
+        )}
       </div>
+
+      {errorInfo && retryCount >= MAX_RETRIES && supportEmail && (
+        <p className="text-sm text-slate-600">
+          Still having trouble?{' '}
+          <a
+            href={`mailto:${supportEmail}`}
+            className="font-medium text-red-700 underline hover:text-red-800"
+          >
+            Contact support
+          </a>
+          .
+        </p>
+      )}
     </div>
   );
 }

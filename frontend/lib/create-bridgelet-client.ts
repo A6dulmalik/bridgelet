@@ -43,20 +43,39 @@ export class RateLimitError extends Error {
 
 /**
  * Thrown for any non-ok, non-429 response. Wraps the backend's `ApiError`
- * envelope (`{ error, message, statusCode }`, see `@/lib/bridgelet`) in a
- * real `Error` instance so callers can rely on `err.message` and
- * `instanceof` checks instead of a raw, un-typed parsed body.
+ * envelope in a real `Error` instance so callers can rely on `err.message`
+ * and `instanceof` checks. Accepts both the legacy flat shape
+ * (`{ error: string, message: string }`) and the nested spec shape
+ * (`{ error: { code: string, message: string, ...} }`).
  */
 export class BridgeletApiError extends Error {
   readonly statusCode: number;
   readonly error: string | undefined;
 
   constructor(body: unknown, statusCode: number) {
-    const parsed = (body ?? {}) as { error?: string; message?: string };
-    super(parsed.message || `Request failed with status ${statusCode}.`);
+    const parsed = (body ?? {}) as Record<string, unknown>;
+    let message: string;
+    let errorCode: string | undefined;
+
+    if (parsed.error && typeof parsed.error === 'object') {
+      const nested = parsed.error as Record<string, unknown>;
+      message =
+        typeof nested.message === 'string'
+          ? nested.message
+          : `Request failed with status ${statusCode}.`;
+      errorCode = typeof nested.code === 'string' ? nested.code : undefined;
+    } else {
+      message =
+        typeof parsed.message === 'string'
+          ? parsed.message
+          : `Request failed with status ${statusCode}.`;
+      errorCode = typeof parsed.error === 'string' ? parsed.error : undefined;
+    }
+
+    super(message);
     this.name = 'BridgeletApiError';
     this.statusCode = statusCode;
-    this.error = parsed.error;
+    this.error = errorCode;
   }
 }
 
@@ -153,10 +172,13 @@ export class BridgeletClient {
   }
 
   prepareAccountTransaction(data: CreateAccountRequest): Promise<PreparedAccountTransaction> {
-    return this.request<PreparedAccountTransaction>(`${this.internalBaseUrl}/api/accounts/prepare`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.request<PreparedAccountTransaction>(
+      `${this.internalBaseUrl}/api/accounts/prepare`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    );
   }
 
   getAccount(accountId: string): Promise<AccountResponse> {
