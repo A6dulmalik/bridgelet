@@ -7,7 +7,23 @@ export interface ConnectedWallet {
   type: WalletType;
 }
 
+export interface SignedFreighterTransaction {
+  signedTxXdr: string;
+  signerAddress: string;
+  networkPassphrase: string;
+}
+
+const NETWORK_PASSPHRASES: Record<string, string> = {
+  'stellar-testnet': 'Test SDF Network ; September 2015',
+  'stellar-mainnet': 'Public Global Stellar Network ; September 2015',
+};
+
 const STORAGE_KEY = 'bridgelet_wallet';
+
+function resolveNetworkPassphrase(): string {
+  const network = process.env['NEXT_PUBLIC_CRYPTO_NETWORK'] ?? 'stellar-testnet';
+  return NETWORK_PASSPHRASES[network] ?? 'Test SDF Network ; September 2015';
+}
 
 // Save wallet to localStorage so it survives page refreshes
 export function persistWallet(wallet: ConnectedWallet): void {
@@ -47,6 +63,54 @@ export async function connectFreighter(): Promise<ConnectedWallet> {
   }
 
   return { publicKey: address, type: 'freighter' };
+}
+
+export function isFreighterTransactionSigningAvailable(): boolean {
+  const maybeSigner = (freighter as unknown as { signTransaction?: unknown }).signTransaction;
+  return typeof maybeSigner === 'function';
+}
+
+export async function signFreighterTransaction(
+  unsignedTxXdr: string,
+): Promise<SignedFreighterTransaction> {
+  if (!unsignedTxXdr.trim()) {
+    throw new Error('Missing unsigned transaction XDR from server.');
+  }
+
+  if (!isFreighterTransactionSigningAvailable()) {
+    throw new Error('Freighter transaction signing is not available in this environment.');
+  }
+
+  const networkPassphrase = resolveNetworkPassphrase();
+  const signResult = await (
+    freighter as unknown as {
+      signTransaction: (
+        xdr: string,
+        options: { networkPassphrase: string },
+      ) => Promise<Record<string, unknown>>;
+    }
+  ).signTransaction(unsignedTxXdr, { networkPassphrase });
+
+  const signedTxXdr =
+    (typeof signResult['signedTxXdr'] === 'string' && signResult['signedTxXdr']) ||
+    (typeof signResult['signedTxXDR'] === 'string' && signResult['signedTxXDR']) ||
+    (typeof signResult['xdr'] === 'string' && signResult['xdr']) ||
+    '';
+
+  if (!signedTxXdr) {
+    throw new Error('Freighter did not return a signed transaction.');
+  }
+
+  const { address } = await freighter.getAddress();
+  if (!address) {
+    throw new Error('Freighter did not return a signer address.');
+  }
+
+  return {
+    signedTxXdr,
+    signerAddress: address,
+    networkPassphrase,
+  };
 }
 
 // LOBSTR is mobile-only, so on desktop we deeplink and poll for a result
