@@ -4,6 +4,10 @@ import { useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
+import {
+  isFreighterTransactionSigningAvailable,
+  signFreighterTransaction,
+} from '@/lib/wallet';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -36,23 +40,65 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
 
+  function buildCreateAccountPayload() {
+    return {
+      fundingSource: state.publicKey,
+      // No dedicated recovery-address field in the send form yet — funds
+      // return to the sender's own wallet if the claim window expires.
+      recovery_address: state.publicKey,
+      amount: state.amountXlm,
+      asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
+      expiresIn: DEFAULT_EXPIRES_IN_SECONDS,
+      metadata: {
+        recipientEmail: state.recipientEmail,
+        memo: state.memo || undefined,
+      },
+    };
+  }
+
+  function canFallbackToBackendSigning(err: unknown): boolean {
+    if (err instanceof BridgeletApiError && [404, 405, 422, 501].includes(err.statusCode)) {
+      return true;
+    }
+
+    if (!(err instanceof Error)) return false;
+    return (
+      err.message.includes('Missing unsigned transaction XDR') ||
+      err.message.includes('Freighter transaction signing is not available') ||
+      err.message.includes('did not return a signed transaction')
+    );
+  }
+
   async function handleConfirm() {
     setSubmitting(true);
     setError(null);
     try {
-      const account = await client.createAccount({
-        fundingSource: state.publicKey,
-        // No dedicated recovery-address field in the send form yet — funds
-        // return to the sender's own wallet if the claim window expires.
-        recovery_address: state.publicKey,
-        amount: state.amountXlm,
-        asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
-        expiresIn: DEFAULT_EXPIRES_IN_SECONDS,
-        metadata: {
-          recipientEmail: state.recipientEmail,
-          memo: state.memo || undefined,
-        },
-      });
+      const payload = buildCreateAccountPayload();
+
+      let account;
+
+      try {
+        if (isFreighterTransactionSigningAvailable()) {
+          const prepared = await client.prepareAccountTransaction(payload);
+          const signed = await signFreighterTransaction(prepared.unsignedTxXdr);
+          account = await client.createAccount({
+            ...payload,
+            signedTxXdr: signed.signedTxXdr,
+            signerAddress: signed.signerAddress,
+            networkPassphrase: signed.networkPassphrase,
+            signingMode: 'freighter-client',
+          });
+        } else {
+          account = await client.createAccount(payload);
+        }
+      } catch (err) {
+        if (!canFallbackToBackendSigning(err)) {
+          throw err;
+        }
+
+        // Experimental endpoint may not exist in all environments yet.
+        account = await client.createAccount(payload);
+      }
 
       if (!account.claimUrl) {
         throw new Error(

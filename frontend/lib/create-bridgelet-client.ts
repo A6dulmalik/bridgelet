@@ -21,6 +21,12 @@ export interface BridgeletClientOptions {
   maxDelayMs?: number;
 }
 
+export interface PreparedAccountTransaction {
+  unsignedTxXdr: string;
+  networkPassphrase?: string;
+  expiresAt?: string;
+}
+
 /** Thrown when the API responds with 429 Too Many Requests. */
 export class RateLimitError extends Error {
   readonly retryAfter: number | null;
@@ -141,6 +147,13 @@ export class BridgeletClient {
 
   createAccount(data: CreateAccountRequest): Promise<AccountResponse> {
     return this.request<AccountResponse>(`${this.internalBaseUrl}/api/accounts`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  prepareAccountTransaction(data: CreateAccountRequest): Promise<PreparedAccountTransaction> {
+    return this.request<PreparedAccountTransaction>(`${this.internalBaseUrl}/api/accounts/prepare`, {
       method: 'POST',
       body: JSON.stringify(data),
     });

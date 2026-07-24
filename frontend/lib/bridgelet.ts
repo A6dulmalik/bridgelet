@@ -13,6 +13,10 @@ export interface CreateAccountRequest {
   asset_issuer?: string;
   expiresIn: number;
   metadata?: Record<string, unknown>;
+  signedTxXdr?: string;
+  signerAddress?: string;
+  networkPassphrase?: string;
+  signingMode?: 'backend' | 'freighter-client';
 }
 
 export type AccountStatus = 'pending' | 'claimed' | 'expired';
