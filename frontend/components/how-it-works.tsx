@@ -61,7 +61,7 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
 
   return (
     <section aria-labelledby="how-it-works-heading" className="py-10">
-      <h2 id="how-it-works-heading" className="text-center text-2xl font-semibold text-slate-950">
+      <h2 id="how-it-works-heading" className="text-center text-2xl font-semibold text-slate-950 dark:text-slate-50">
         How It Works
       </h2>
       <p className="mt-2 text-center text-sm text-slate-700">
@@ -85,10 +85,10 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
               aria-current={isActive ? 'step' : undefined}
               className={`relative flex flex-col items-center rounded-xl border p-6 text-center transition-all duration-500 ${
                 isActive
-                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse'
+                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse dark:bg-slate-800'
                   : isPast
-                    ? 'border-sky-200 bg-white'
-                    : 'border-slate-200 bg-slate-50'
+                    ? 'border-sky-200 bg-white dark:border-sky-800 dark:bg-slate-800'
+                    : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
               }`}
             >
               <div
