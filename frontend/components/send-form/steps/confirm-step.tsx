@@ -8,6 +8,7 @@ import {
   isFreighterTransactionSigningAvailable,
   signFreighterTransaction,
 } from '@/lib/wallet';
+import { AccountDetailsSkeleton } from '@/components/skeleton-loader';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -113,6 +114,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (submitting) {
+    return <AccountDetailsSkeleton />;
   }
 
   if (submitted) {

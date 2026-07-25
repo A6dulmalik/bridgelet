@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ClaimStatusCard } from '@/components/claim-status-card';
+import { ClaimStatusCardSkeleton } from '@/components/skeleton-loader';
 import { AccountStatus } from '@/lib/api/types';
 import { BridgeletClient, BridgeletApiError } from '@/lib/api/client';
 
@@ -98,15 +99,7 @@ export function ClaimPageClient({ token, supportEmail }: ClaimPageClientProps) {
   }
 
   if (!view) {
-    return (
-      <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-        <span
-          className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"
-          aria-hidden="true"
-        />
-        <p className="text-sm text-slate-600">Loading claim details…</p>
-      </div>
-    );
+    return <ClaimStatusCardSkeleton />;
   }
 
   return (
