@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { PageShell } from '@/components/page-shell';
 import { HowItWorks } from '@/components/how-it-works';
+import { CTABanner } from '@/components/cta-banner';
 
 export default function HomePage() {
   return (
     <PageShell
       title="Bridgelet Payment Flows"
       description="Reference placeholder UI for sender and recipient claim experiences."
+      footer={<CTABanner />}
     >
       <div className="space-y-8">
         <HowItWorks intervalMs={3500} />

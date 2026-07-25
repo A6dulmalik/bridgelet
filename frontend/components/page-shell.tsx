@@ -6,9 +6,11 @@ type PageShellProps = {
   title: string;
   description: string;
   children?: ReactNode;
+  /** Optional full-width content rendered below the main section (e.g. a CTA banner). */
+  footer?: ReactNode;
 };
 
-export function PageShell({ title, description, children }: PageShellProps) {
+export function PageShell({ title, description, children, footer }: PageShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="border-b border-slate-200 bg-white px-6 py-3">
@@ -26,6 +28,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
           {children}
         </section>
       </main>
+      {footer}
     </div>
   );
 }
