@@ -15,15 +15,22 @@ import { publicEnv } from '@/lib/env';
 /**
  * Default claim window for accounts created from the send form.
  * CreateAccountRequest.expiresIn is required by the backend (min 3600,
- * max 2592000 seconds) but SendFormState has no UI for choosing it yet —
- * 24h matches the copy already shown to the sender below ("They have 24
- * hours to claim their funds"). Surfacing this as a user-editable option
- * is a follow-up UX decision, not part of this wiring fix.
+ * max 2592000 seconds). This constant is kept as a fallback only;
+ * the send form now lets the sender choose the expiry.
  */
-const DEFAULT_EXPIRES_IN_SECONDS = 24 * 60 * 60;
+const DEFAULT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60;
 const MAX_RETRIES = 3;
 
 const client = new BridgeletClient();
+
+function formatExpiryLabel(seconds: number): string {
+  const days = Math.round(seconds / (24 * 60 * 60));
+  if (days === 1) return '24 hours';
+  if (days < 7) return `${days} days`;
+  if (days === 7) return '7 days';
+  if (days === 30) return '30 days';
+  return `${days} days`;
+}
 
 function classifyError(err: unknown): AccountCreationErrorInfo {
   if (err instanceof RateLimitError) {
@@ -57,7 +64,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       recovery_address: state.publicKey,
       amount: state.amountXlm,
       asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
-      expiresIn: DEFAULT_EXPIRES_IN_SECONDS,
+      expiresIn: state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS,
       metadata: {
         recipientEmail: state.recipientEmail,
         memo: state.memo || undefined,
@@ -150,8 +157,8 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       >
         <p className="font-medium text-green-800">Payment sent!</p>
         <p className="mt-1 text-sm text-green-700">
-          A claim link has been sent to <strong>{state.recipientEmail}</strong>. They have 24 hours
-          to claim their funds.
+          A claim link has been sent to <strong>{state.recipientEmail}</strong>. They have{' '}
+          {formatExpiryLabel(state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)} to claim their funds.
         </p>
 
         {isSupported && claimUrl && (
