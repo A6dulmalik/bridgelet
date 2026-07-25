@@ -12,7 +12,7 @@ export default function HomePage() {
         <HowItWorks intervalMs={3500} />
         <div className="space-y-4">
           <p className="text-slate-700">Select a flow to continue.</p>
-          <nav className="flex flex-col gap-3 sm:flex-row">
+          <nav aria-label="Flow selection" className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/send"
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"

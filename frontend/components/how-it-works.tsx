@@ -17,7 +17,7 @@ const STEPS: Step[] = [
     description: 'A temporary Stellar account is funded for this payment only.',
     ariaLabel: 'Step 1: Sender creates ephemeral account',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
       </svg>
@@ -29,7 +29,7 @@ const STEPS: Step[] = [
     description: 'The recipient opens a secure claim link and submits their wallet.',
     ariaLabel: 'Step 2: Recipient claims via link',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
       </svg>
     ),
@@ -40,7 +40,7 @@ const STEPS: Step[] = [
     description: 'Funds are swept from the ephemeral account to the recipient\'s wallet.',
     ariaLabel: 'Step 3: Funds sweep to permanent wallet',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
         <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
       </svg>
     ),
@@ -64,7 +64,7 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
       <h2 id="how-it-works-heading" className="text-center text-2xl font-semibold text-slate-950">
         How It Works
       </h2>
-      <p className="mt-2 text-center text-sm text-slate-600">
+      <p className="mt-2 text-center text-sm text-slate-700">
         Three simple steps to send crypto without requiring a wallet.
       </p>
 
@@ -93,7 +93,7 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
             >
               <div
                 className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-500 ${
-                  isActive ? 'bg-sky-500 text-white' : isPast ? 'bg-sky-100 text-sky-700' : 'bg-slate-200 text-slate-500'
+                  isActive ? 'bg-sky-600 text-white' : isPast ? 'bg-sky-100 text-sky-800' : 'bg-slate-200 text-slate-700'
                 }`}
               >
                 {step.icon}
@@ -101,12 +101,13 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
 
               <div className="mt-4">
                 <h3 className="text-base font-semibold text-slate-900">{step.title}</h3>
-                <p className="mt-1 text-sm text-slate-600">{step.description}</p>
+                <p className="mt-1 text-sm text-slate-700">{step.description}</p>
               </div>
 
               {index < STEPS.length - 1 && (
                 <div className="hidden md:block absolute top-1/2 -right-3 z-10" aria-hidden="true">
                   <svg
+                    aria-hidden="true"
                     width="24"
                     height="24"
                     viewBox="0 0 24 24"
@@ -124,9 +125,9 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
             </div>
           );
         })}
-        <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {STEPS[activeStep]?.title ?? ''}
-        </div>
+      </div>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {STEPS[activeStep]?.title ?? ''}
       </div>
     </section>
   );

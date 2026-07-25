@@ -1,6 +1,6 @@
 export default function Logo({ className = 'w-10 h-10' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 128 128" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 128 128" className={className} aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="linkGradient" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#38BDF8" />
