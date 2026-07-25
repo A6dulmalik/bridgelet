@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { SkeletonLoader } from './skeleton-loader';
+import { SkeletonLoader, ClaimStatusCardSkeleton, AccountDetailsSkeleton } from './skeleton-loader';
 
 const meta: Meta<typeof SkeletonLoader> = {
   title: 'Components/SkeletonLoader',
@@ -18,4 +18,14 @@ export const WithHeader: Story = {
 
 export const ManyRows: Story = {
   args: { rows: 6 },
+};
+
+export const ClaimCard: Story = {
+  render: () => <ClaimStatusCardSkeleton />,
+  name: 'ClaimStatusCard Skeleton',
+};
+
+export const AccountDetails: Story = {
+  render: () => <AccountDetailsSkeleton />,
+  name: 'AccountDetails Skeleton',
 };

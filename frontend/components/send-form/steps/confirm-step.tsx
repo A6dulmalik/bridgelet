@@ -6,6 +6,10 @@ import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
 import { isFreighterTransactionSigningAvailable, signFreighterTransaction } from '@/lib/wallet';
 import {
+  isFreighterTransactionSigningAvailable,
+  signFreighterTransaction,
+} from '@/lib/wallet';
+import { AccountDetailsSkeleton } from '@/components/skeleton-loader';
   classifyAccountCreationError,
   AccountCreationErrorCode,
   type AccountCreationErrorInfo,
@@ -131,6 +135,8 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     }
   }
 
+  if (submitting) {
+    return <AccountDetailsSkeleton />;
   function handleConfirm() {
     executeCreateAccount(1);
   }
