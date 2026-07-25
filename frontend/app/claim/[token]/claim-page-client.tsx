@@ -4,64 +4,22 @@ import { useEffect, useState } from 'react';
 import { ClaimStatusCard } from '@/components/claim-status-card';
 import { AccountStatus } from '@/lib/api/types';
 import { BridgeletClient, BridgeletApiError } from '@/lib/api/client';
+import { ClaimView, loadClaimView, toStroops } from '@/lib/claim-view';
 
 interface ClaimPageClientProps {
   token: string;
   supportEmail: string;
-}
-
-export interface ClaimView {
-  status: AccountStatus;
-  amountStroops?: string;
-  assetCode?: string;
-  expiresAt?: string;
-  sweepNote?: string;
+  initialView?: ClaimView;
 }
 
 const client = new BridgeletClient();
 
-/**
- * Decimal-string amount (e.g. "100.0000000") -> stroops string, for display
- * via ClaimStatusCard's existing stroops-based formatter.
- */
-function toStroops(decimalAmount: string): string {
-  if (!decimalAmount) return '0';
-  const num = parseFloat(decimalAmount);
-  if (Number.isNaN(num)) return '0';
-  return String(Math.round(num * 10_000_000));
-}
-
-/**
- * Maps POST /claims/verify's outcome onto the AccountStatus values
- * ClaimStatusCard knows how to render. verify() reports validity via HTTP
- * status rather than an AccountStatus field, so this mapping is a
- * deliberate bridge, not a literal 1:1 translation — see bridgelet-sdk's
- * ClaimsController for the source error semantics (401/409/400).
- */
-async function loadClaimView(claimToken: string): Promise<ClaimView> {
-  try {
-    const result = await client.verifyClaim(claimToken);
-    return {
-      status: AccountStatus.PENDING_CLAIM,
-      amountStroops: toStroops(result.amountStroops ?? '0'),
-      assetCode: result.assetCode === 'native' ? 'XLM' : result.assetCode,
-      expiresAt: result.expiresAt,
-    };
-  } catch (err) {
-    if (err instanceof BridgeletApiError) {
-      if (err.statusCode === 409) return { status: AccountStatus.CLAIMED };
-      if (err.statusCode === 400) return { status: AccountStatus.PENDING_PAYMENT };
-      if (err.statusCode === 401) return { status: AccountStatus.EXPIRED };
-    }
-    return { status: AccountStatus.FAILED };
-  }
-}
-
-export function ClaimPageClient({ token, supportEmail }: ClaimPageClientProps) {
-  const [view, setView] = useState<ClaimView | null>(null);
+export function ClaimPageClient({ token, supportEmail, initialView }: ClaimPageClientProps) {
+  const [view, setView] = useState<ClaimView | null>(initialView ?? null);
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
+    if (initialView) return;
     let cancelled = false;
     loadClaimView(token)
       .then((result) => {
@@ -73,7 +31,7 @@ export function ClaimPageClient({ token, supportEmail }: ClaimPageClientProps) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, initialView]);
 
   async function handleClaim(destinationAddress: string) {
     const result = await client.redeemClaim(token, destinationAddress);
