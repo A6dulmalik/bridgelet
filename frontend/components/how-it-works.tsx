@@ -61,10 +61,10 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
 
   return (
     <section aria-labelledby="how-it-works-heading" className="py-10">
-      <h2 id="how-it-works-heading" className="text-center text-2xl font-semibold text-slate-950">
+      <h2 id="how-it-works-heading" className="text-center text-2xl font-semibold text-slate-950 dark:text-slate-50">
         How It Works
       </h2>
-      <p className="mt-2 text-center text-sm text-slate-600">
+      <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
         Three simple steps to send crypto without requiring a wallet.
       </p>
 
@@ -85,10 +85,10 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
               aria-current={isActive ? 'step' : undefined}
               className={`relative flex flex-col items-center rounded-xl border p-6 text-center transition-all duration-500 ${
                 isActive
-                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse'
+                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse dark:bg-slate-800'
                   : isPast
-                    ? 'border-sky-200 bg-white'
-                    : 'border-slate-200 bg-slate-50'
+                    ? 'border-sky-200 bg-white dark:border-sky-800 dark:bg-slate-800'
+                    : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
               }`}
             >
               <div
@@ -100,8 +100,8 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
               </div>
 
               <div className="mt-4">
-                <h3 className="text-base font-semibold text-slate-900">{step.title}</h3>
-                <p className="mt-1 text-sm text-slate-600">{step.description}</p>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{step.title}</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{step.description}</p>
               </div>
 
               {index < STEPS.length - 1 && (
