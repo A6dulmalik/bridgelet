@@ -57,8 +57,8 @@ describe('HowItWorks', () => {
   });
 
   it('announces the active step in a live region', () => {
-    render(<HowItWorks intervalMs={999999} />);
-    const liveRegion = screen.getByLabelText(/how it works steps/i).querySelector('[aria-live="polite"]');
+    const { container } = render(<HowItWorks intervalMs={999999} />);
+    const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeInTheDocument();
     expect(liveRegion).toHaveTextContent('Sender creates ephemeral account');
   });

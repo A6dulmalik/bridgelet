@@ -6,7 +6,7 @@ import type {
   RedeemClaimRequest,
   RedeemClaimResponse,
 } from '@/lib/bridgelet';
-import { ClaimView } from '@/app/claim/[token]/claim-page-client';
+import { ClaimView } from '@/lib/claim-view';
 
 export interface BridgeletClientOptions {
   /** Base URL of the bridgelet-sdk backend, used for the unguarded /claims/* routes. */

@@ -414,90 +414,32 @@ Chromatic compares component snapshots on each PR. Reviewers approve or reject v
 
 ### Lighthouse CI Performance Audits
 
-Lighthouse CI runs Google Lighthouse against the built app on every pull request and enforces minimum scores for performance, accessibility, best practices, and SEO.
+Lighthouse CI runs Google Lighthouse against the built app on every pull request and push to main, enforcing strict minimum scores for performance, accessibility, and best practices.
 
 #### Setup
 
+The configuration is already present in `frontend/lighthouserc.js` and the workflow in `.github/workflows/lighthouse-ci.yml`.
+
+#### Running Locally
+
+You can run the Lighthouse checks locally before pushing to catch regressions early:
+
 ```bash
 cd frontend
-npm install --save-dev @lhci/cli
-```
-
-Create `frontend/lighthouserc.cjs`:
-
-```js
-module.exports = {
-  ci: {
-    collect: {
-      // Build and serve the Next.js app, then audit these URLs
-      startServerCommand: 'npm run start',
-      startServerReadyPattern: 'ready on',
-      url: [
-        'http://localhost:3000/',
-        'http://localhost:3000/send',
-        'http://localhost:3000/claim/abc123',
-      ],
-      numberOfRuns: 3,
-    },
-    assert: {
-      assertions: {
-        'categories:performance':     ['warn',  { minScore: 0.8 }],
-        'categories:accessibility':   ['error', { minScore: 0.9 }],
-        'categories:best-practices':  ['warn',  { minScore: 0.9 }],
-        'categories:seo':             ['warn',  { minScore: 0.8 }],
-      },
-    },
-    upload: {
-      target: 'temporary-public-storage', // replace with LHCI server URL in production
-    },
-  },
-};
-```
-
-Add scripts to `frontend/package.json`:
-
-```json
-"scripts": {
-  "lhci": "lhci autorun"
-}
-```
-
-#### CI integration
-
-Add a separate workflow or job so Lighthouse audits run after a successful build:
-
-```yaml
-lighthouse:
-  name: Lighthouse CI
-  runs-on: ubuntu-latest
-  needs: build-and-test
-  steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: npm
-        cache-dependency-path: frontend/package-lock.json
-    - run: npm ci
-      working-directory: frontend
-    - run: npm run build
-      working-directory: frontend
-    - run: npm run lhci
-      working-directory: frontend
-      env:
-        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+npm install
+npm run build
+npm run lhci
 ```
 
 #### Score thresholds
 
-| Category | Warning threshold | Error threshold |
-|---|---|---|
-| Performance | 80 | — |
-| Accessibility | — | 90 |
-| Best Practices | 90 | — |
-| SEO | 80 | — |
+| Category | Error threshold (Minimum Score) |
+|---|---|
+| Performance | 85 |
+| Accessibility | 95 |
+| Best Practices | 90 |
 
-Accessibility failures block the CI job (`error` level). The others emit warnings. Adjust thresholds in `lighthouserc.cjs` as the app matures.
+**Any score dropping below these thresholds will block the CI job (fail the build).** If you see a CI failure, review the output logs or the temporary public storage link for a detailed Lighthouse report to fix the issues.
 
 ---
 
