@@ -31,9 +31,10 @@ const INITIAL_STATE: SendFormState = {
 const STEP_ORDER: SendFormStep[] = ['connect', 'expiry', 'details', 'confirm'];
 
 const STEP_LABELS: Record<SendFormStep, string> = {
-  connect: 'Step 1 of 3: Connect wallet',
-  details: 'Step 2 of 3: Set account details',
-  confirm: 'Step 3 of 3: Create account',
+  connect: 'Step 1 of 4: Connect wallet',
+  expiry: 'Step 2 of 4: Set expiry',
+  details: 'Step 3 of 4: Set account details',
+  confirm: 'Step 4 of 4: Create account',
 };
 
 /**

@@ -3,12 +3,14 @@ import type { ReactNode } from 'react';
 import './globals.css';
 import { DevToolbar } from '@/components/dev-toolbar';
 import { MockProvider } from '@/components/mock-provider';
+import { ServiceWorkerRegister } from '@/components/service-worker-register';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Bridgelet Payments',
   description: 'Reference UI for sending and claiming crypto payments.',
   icons: { icon: '/logo-icon.svg' },
+  manifest: '/manifest.webmanifest',
 };
 
 type RootLayoutProps = {
@@ -43,6 +45,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <ThemeProvider>
+          <ServiceWorkerRegister />
           {children}
           {isDev && <DevToolbar />}
           {isDev && <MockProvider />}
