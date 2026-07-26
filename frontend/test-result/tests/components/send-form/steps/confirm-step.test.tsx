@@ -64,6 +64,7 @@ const STATE = {
   amountXlm: '10',
   assetCode: 'XLM',
   memo: 'Thanks!',
+  expiresIn: 7 * 24 * 60 * 60,
 };
 
 describe('ConfirmStep error handling', () => {
