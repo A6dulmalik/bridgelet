@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ConnectStep } from './steps/connect-step';
+import { ExpiryStep } from './steps/expiry-step';
 import { DetailsStep } from './steps/details-step';
 import { ConfirmStep } from './steps/confirm-step';
 
-export type SendFormStep = 'connect' | 'details' | 'confirm';
+export type SendFormStep = 'connect' | 'expiry' | 'details' | 'confirm';
 
 export interface SendFormState {
   publicKey: string;
@@ -14,6 +15,7 @@ export interface SendFormState {
   amountXlm: string;
   assetCode: string;
   memo: string;
+  expiresIn: number;
 }
 
 const INITIAL_STATE: SendFormState = {
@@ -23,9 +25,10 @@ const INITIAL_STATE: SendFormState = {
   amountXlm: '',
   assetCode: 'XLM',
   memo: '',
+  expiresIn: 7 * 24 * 60 * 60,
 };
 
-const STEP_ORDER: SendFormStep[] = ['connect', 'details', 'confirm'];
+const STEP_ORDER: SendFormStep[] = ['connect', 'expiry', 'details', 'confirm'];
 
 const STEP_LABELS: Record<SendFormStep, string> = {
   connect: 'Step 1 of 3: Connect wallet',
@@ -114,6 +117,14 @@ export function SendForm() {
             updateState({ publicKey: key });
             goNext();
           }}
+        />
+      )}
+      {step === 'expiry' && (
+        <ExpiryStep
+          expiresIn={formState.expiresIn}
+          onChange={(expiresIn) => updateState({ expiresIn })}
+          onBack={goBack}
+          onNext={goNext}
         />
       )}
       {step === 'details' && (

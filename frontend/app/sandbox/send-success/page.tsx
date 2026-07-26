@@ -26,6 +26,7 @@ const TEST_FORM_STATE: SendFormState = {
   amountXlm: '5',
   assetCode: 'XLM',
   memo: 'Invoice #42',
+  expiresIn: 7 * 24 * 60 * 60,
 };
 
 export default function SendSuccessSandboxPage() {
