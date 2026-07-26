@@ -26,9 +26,9 @@ const INITIAL_STATE: SendFormState = {
 const STEP_ORDER: SendFormStep[] = ['connect', 'details', 'confirm'];
 
 const STEP_LABELS: Record<SendFormStep, string> = {
-  connect: 'Step 1 of 3: Connect Wallet',
-  details: 'Step 2 of 3: Payment Details',
-  confirm: 'Step 3 of 3: Confirm & Send',
+  connect: 'Step 1 of 3: Connect wallet',
+  details: 'Step 2 of 3: Set account details',
+  confirm: 'Step 3 of 3: Create account',
 };
 
 /**
@@ -67,7 +67,7 @@ export function SendForm() {
   return (
     <div className="space-y-6">
       {/* Step indicator */}
-      <nav aria-label="Send form progress">
+      <nav aria-label="Create ephemeral account progress">
         <ol className="flex gap-2" role="list">
           {STEP_ORDER.map((s, i) => {
             const isCurrent = s === step;
