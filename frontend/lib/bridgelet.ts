@@ -70,9 +70,22 @@ export interface ApiError {
   statusCode: number;
 }
 
-import { BridgeletClient, type BridgeletClientOptions } from '@/lib/create-bridgelet-client';
+import {
+  BridgeletClient,
+  BridgeletApiError,
+  RateLimitError,
+  type BridgeletClientOptions,
+} from '@/lib/create-bridgelet-client';
 
-export { BridgeletClient, type BridgeletClientOptions };
+export { BridgeletClient, BridgeletApiError, RateLimitError, type BridgeletClientOptions };
+
+// ─── Ephemeral account ───────────────────────────────────────────────────────
+
+/**
+ * An ephemeral Stellar account returned by the SDK's `POST /accounts`
+ * endpoint. Alias of `AccountResponse`, named for send-form callers.
+ */
+export type EphemeralAccount = AccountResponse;
 
 let _defaultClient: BridgeletClient | null = null;
 
@@ -81,6 +94,23 @@ function defaultClient(): BridgeletClient {
     _defaultClient = new BridgeletClient();
   }
   return _defaultClient;
+}
+
+/**
+ * Create an ephemeral account by wrapping the SDK's `POST /accounts`
+ * endpoint.
+ *
+ * Auth: the request is routed through this app's own `/api/accounts` route
+ * handler, which attaches the `Authorization: Bearer` header server-side —
+ * the SDK token is never exposed to the browser.
+ *
+ * Errors: non-2xx responses are parsed into typed errors by the underlying
+ * client — `RateLimitError` on 429 (with `retryAfter`) and
+ * `BridgeletApiError` (with `statusCode` and error code) otherwise.
+ * Transient network failures and 5xx responses are retried with backoff.
+ */
+export function createEphemeralAccount(data: CreateAccountRequest): Promise<EphemeralAccount> {
+  return defaultClient().createAccount(data);
 }
 
 export function redeemClaim(
