@@ -9,6 +9,7 @@ export type SendFormStep = 'connect' | 'details' | 'confirm';
 
 export interface SendFormState {
   publicKey: string;
+  recipientName: string;
   recipientEmail: string;
   amountXlm: string;
   assetCode: string;
@@ -17,6 +18,7 @@ export interface SendFormState {
 
 const INITIAL_STATE: SendFormState = {
   publicKey: '',
+  recipientName: '',
   recipientEmail: '',
   amountXlm: '',
   assetCode: 'XLM',
