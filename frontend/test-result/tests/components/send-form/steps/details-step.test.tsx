@@ -24,6 +24,7 @@ const INITIAL_STATE: SendFormState = {
   amountXlm: '',
   assetCode: 'XLM',
   memo: '',
+  expiresIn: 7 * 24 * 60 * 60,
 };
 
 /**
