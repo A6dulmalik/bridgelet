@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SiteFooter } from './site-footer';
 import { SiteNav } from './site-nav';
 
 type PageShellProps = {
@@ -23,6 +24,7 @@ export function PageShell({ title, description, children, footer }: PageShellPro
         </section>
       </main>
       {footer}
+      <SiteFooter />
     </div>
   );
 }
