@@ -37,6 +37,19 @@ Reference Next.js UI for initiating and claiming crypto payments.
 - `/send` sender flow placeholder
 - `/claim/[token]` recipient claim placeholder
 
+## Send flow
+
+The send form (`components/send-form/`) is a three-step wizard: **Connect** → **Details** → **Confirm**.
+
+The details step (`steps/details-step.tsx`) collects the payment details:
+
+- **Recipient name** and **recipient email** — both optional; the email format is validated when provided.
+- **Amount** — required, must be greater than 0.
+- **Asset** — `XLM` or `USDC` (defaults to `XLM`).
+- A live **XLM → USD conversion** is shown under the amount field, using the CoinGecko rate from `lib/xlm-price.ts` (cached for 60 seconds, hidden if the rate is unavailable).
+
+Validation runs on submit and then re-runs on every change so errors clear as soon as the input becomes valid. Errors are announced to assistive technology via `role="alert"` and linked to their fields with `aria-describedby`/`aria-invalid`.
+
 ## Quality checks
 
 - Type-check only:

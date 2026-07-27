@@ -59,6 +59,7 @@ function mockCreateAccountRejects(err: unknown) {
 
 const STATE = {
   publicKey: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ23456789012345',
+  recipientName: 'Test Recipient',
   recipientEmail: 'test@example.com',
   amountXlm: '10',
   assetCode: 'XLM',

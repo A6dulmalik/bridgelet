@@ -66,7 +66,8 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       asset_code: state.assetCode !== 'XLM' ? state.assetCode : undefined,
       expiresIn: state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS,
       metadata: {
-        recipientEmail: state.recipientEmail,
+        recipientName: state.recipientName || undefined,
+        recipientEmail: state.recipientEmail || undefined,
         memo: state.memo || undefined,
       },
     };
@@ -157,8 +158,14 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       >
         <p className="font-medium text-green-800">Payment sent!</p>
         <p className="mt-1 text-sm text-green-700">
-          A claim link has been sent to <strong>{state.recipientEmail}</strong>. They have{' '}
-          {formatExpiryLabel(state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)} to claim their funds.
+          {state.recipientEmail ? (
+            <>
+              A claim link has been sent to <strong>{state.recipientEmail}</strong>.
+            </>
+          ) : (
+            <>Your claim link is ready to share with your recipient.</>
+          )}{' '}
+          They have 24 hours to claim their funds.
         </p>
 
         {isSupported && claimUrl && (
@@ -200,7 +207,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
         </div>
         <div className="flex justify-between py-1.5">
           <dt className="font-medium text-slate-700">Recipient</dt>
-          <dd className="text-slate-600">{state.recipientEmail}</dd>
+          <dd className="text-slate-600">
+            {[state.recipientName, state.recipientEmail].filter(Boolean).join(' — ') ||
+              'Not specified'}
+          </dd>
         </div>
         <div className="flex justify-between py-1.5">
           <dt className="font-medium text-slate-700">Amount</dt>
