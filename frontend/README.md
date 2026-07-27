@@ -50,6 +50,25 @@ The details step (`steps/details-step.tsx`) collects the payment details:
 
 Validation runs on submit and then re-runs on every change so errors clear as soon as the input becomes valid. Errors are announced to assistive technology via `role="alert"` and linked to their fields with `aria-describedby`/`aria-invalid`.
 
+## SDK wrapper (`lib/bridgelet.ts`)
+
+`lib/bridgelet.ts` is the typed entry point for the bridgelet-sdk API. The confirm step of the send form creates ephemeral accounts through it:
+
+```ts
+import { createEphemeralAccount, type EphemeralAccount } from '@/lib/bridgelet';
+
+const account: EphemeralAccount = await createEphemeralAccount({
+  fundingSource: senderPublicKey,
+  recovery_address: senderPublicKey,
+  amount: '25',
+  expiresIn: 86400,
+});
+```
+
+- **Auth** — the wrapper never sends credentials from the browser. Requests go to this app's own `app/api/accounts/route.ts`, which attaches the `Authorization: Bearer` SDK token server-side (`BRIDGELET_SDK_TOKEN`).
+- **Errors** — non-2xx responses are parsed into typed errors: `RateLimitError` on 429 (exposes `retryAfter`) and `BridgeletApiError` otherwise (exposes `statusCode` and the backend error code). `lib/account-errors.ts` maps these to user-facing messages.
+- **Retries** — transient network failures and 5xx responses are retried with exponential backoff by the underlying `BridgeletClient` (`lib/create-bridgelet-client.ts`).
+
 ## Quality checks
 
 - Type-check only:

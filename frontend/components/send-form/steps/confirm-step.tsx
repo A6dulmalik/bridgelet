@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError, BridgeletApiError } from '@/lib/api/client';
+import { createEphemeralAccount, type EphemeralAccount } from '@/lib/bridgelet';
 import { isFreighterTransactionSigningAvailable, signFreighterTransaction } from '@/lib/wallet';
 import {
   classifyAccountCreationError,
@@ -93,13 +94,13 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     try {
       const payload = buildCreateAccountPayload();
 
-      let account;
+      let account: EphemeralAccount;
 
       try {
         if (isFreighterTransactionSigningAvailable()) {
           const prepared = await client.prepareAccountTransaction(payload);
           const signed = await signFreighterTransaction(prepared.unsignedTxXdr);
-          account = await client.createAccount({
+          account = await createEphemeralAccount({
             ...payload,
             signedTxXdr: signed.signedTxXdr,
             signerAddress: signed.signerAddress,
@@ -107,14 +108,14 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
             signingMode: 'freighter-client',
           });
         } else {
-          account = await client.createAccount(payload);
+          account = await createEphemeralAccount(payload);
         }
       } catch (err) {
         if (!canFallbackToBackendSigning(err)) {
           throw err;
         }
 
-        account = await client.createAccount(payload);
+        account = await createEphemeralAccount(payload);
       }
 
       if (!account.claimUrl) {
