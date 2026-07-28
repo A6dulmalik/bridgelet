@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import type { SendFormState } from '../index';
+import { ChainSelector } from '../../chain-selector';
 import { getXlmUsdRate, formatFiat } from '@/lib/xlm-price';
 
 const SUPPORTED_ASSETS = ['XLM', 'USDC'] as const;
 
-// Simple format check — the backend performs authoritative validation.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type FieldErrors = {
@@ -44,11 +44,11 @@ type DetailsStepProps = {
 };
 
 export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProps) {
+  const [selectedChain, setSelectedChain] = useState('stellar');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState(false);
   const [usdRate, setUsdRate] = useState<number | null>(null);
 
-  // Fetch the XLM/USD rate once on mount; the helper caches for 60s.
   useEffect(() => {
     let cancelled = false;
     getXlmUsdRate().then((rate) => {
@@ -59,11 +59,8 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
     };
   }, []);
 
-  // Re-validate on every change once the user has attempted to submit,
-  // so error messages clear as soon as the input becomes valid.
   useEffect(() => {
     if (touched) setErrors(validateDetails(state));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.recipientEmail, state.amountXlm, state.assetCode, touched]);
 
   function handleSubmit(e: React.FormEvent) {
@@ -80,6 +77,11 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <ChainSelector
+        selectedChainId={selectedChain}
+        onSelectChain={setSelectedChain}
+      />
+
       <div>
         <label htmlFor="recipient-name" className="block text-sm font-medium text-slate-900">
           Recipient name <span className="font-normal text-slate-500">(optional)</span>
