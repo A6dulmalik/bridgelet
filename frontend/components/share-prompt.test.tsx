@@ -1,9 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { SharePrompt } from './share-prompt';
 
-// NfcShareButton is tested in its own suite; stub it here.
 vi.mock('./nfc-share-button', () => ({
   NfcShareButton: ({ claimUrl }: { claimUrl: string }) => (
     <button data-testid="nfc-share-button" data-url={claimUrl}>
@@ -15,7 +13,9 @@ vi.mock('./nfc-share-button', () => ({
 const APP_URL = 'https://bridgelet.org/claim?token=abc123';
 
 describe('SharePrompt', () => {
-  // ── Static content ─────────────────────────────────────────────────────────
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it('renders the app URL in the code block', () => {
     render(<SharePrompt appUrl={APP_URL} />);
@@ -28,8 +28,6 @@ describe('SharePrompt', () => {
     expect(screen.getByText(/claim directly from a link/i)).toBeInTheDocument();
   });
 
-  // ── Copy button ────────────────────────────────────────────────────────────
-
   it('renders the Copy link button', () => {
     render(<SharePrompt appUrl={APP_URL} />);
     expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument();
@@ -37,39 +35,36 @@ describe('SharePrompt', () => {
 
   it('shows "Copied!" after clicking copy and reverts after 2 s', async () => {
     vi.useFakeTimers();
-    Object.assign(navigator, {
-      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true,
     });
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
-
     render(<SharePrompt appUrl={APP_URL} />);
-    await user.click(screen.getByRole('button', { name: /copy link/i }));
+    fireEvent.click(screen.getByRole('button', { name: /copy link/i }));
 
-    expect(await screen.findByRole('button', { name: /copied!/i })).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(screen.getByRole('button', { name: /copied!/i })).toBeInTheDocument(),
+    );
 
     vi.advanceTimersByTime(2000);
-    await waitFor(() =>
+    await vi.waitFor(() =>
       expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument(),
     );
-    vi.useRealTimers();
   });
 
-  it('does not throw when the clipboard API is unavailable', async () => {
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockRejectedValue(new Error('not allowed')),
-      },
+  it('does not throw when the clipboard API is unavailable', () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('not allowed')) },
+      configurable: true,
     });
-    const user = userEvent.setup();
     render(<SharePrompt appUrl={APP_URL} />);
 
-    // Should not throw
-    await user.click(screen.getByRole('button', { name: /copy link/i }));
-    // Button label stays the same since copy failed silently
+    expect(() =>
+      fireEvent.click(screen.getByRole('button', { name: /copy link/i })),
+    ).not.toThrow();
+
     expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument();
   });
-
-  // ── WhatsApp share ─────────────────────────────────────────────────────────
 
   it('renders a WhatsApp share link with the correct wa.me deep-link', () => {
     render(<SharePrompt appUrl={APP_URL} />);
@@ -79,8 +74,6 @@ describe('SharePrompt', () => {
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
-
-  // ── X (Twitter) share ──────────────────────────────────────────────────────
 
   it('renders a Share on X link pointing to twitter.com/intent/tweet', () => {
     render(<SharePrompt appUrl={APP_URL} />);
@@ -94,8 +87,6 @@ describe('SharePrompt', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  // ── LinkedIn share ─────────────────────────────────────────────────────────
-
   it('renders a Share on LinkedIn link', () => {
     render(<SharePrompt appUrl={APP_URL} />);
     const link = screen.getByRole('link', { name: /share on linkedin/i });
@@ -107,14 +98,10 @@ describe('SharePrompt', () => {
     expect(link).toHaveAttribute('target', '_blank');
   });
 
-  // ── NFC share button ───────────────────────────────────────────────────────
-
   it('passes the appUrl to the NfcShareButton', () => {
     render(<SharePrompt appUrl={APP_URL} />);
     expect(screen.getByTestId('nfc-share-button')).toHaveAttribute('data-url', APP_URL);
   });
-
-  // ── Accessibility ──────────────────────────────────────────────────────────
 
   it('opens every external link in a new tab with noopener noreferrer', () => {
     render(<SharePrompt appUrl={APP_URL} />);
