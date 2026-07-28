@@ -60,6 +60,7 @@ type SubmitPhase = 'idle' | 'preparing' | 'awaiting-freighter' | 'submitting';
 
 export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<SubmitPhase>('idle');
   const [signingModeUsed, setSigningModeUsed] = useState<'freighter-client' | 'backend' | null>(
     null,
