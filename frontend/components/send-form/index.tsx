@@ -81,14 +81,18 @@ export function SendForm() {
             return (
               <li key={s} className="flex items-center gap-2">
                 {i > 0 && (
-                  <span aria-hidden="true" className="text-slate-300">
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
                     /
                   </span>
                 )}
                 <span
                   aria-current={isCurrent ? 'step' : undefined}
                   className={`text-xs font-medium ${
-                    isCurrent ? 'text-slate-900' : isDone ? 'text-green-700' : 'text-slate-500'
+                    isCurrent
+                      ? 'text-slate-900 dark:text-slate-100'
+                      : isDone
+                        ? 'text-green-700 dark:text-green-400'
+                        : 'text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -105,7 +109,7 @@ export function SendForm() {
       <h2
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl font-semibold text-slate-900 focus:outline-none"
+        className="text-xl font-semibold text-slate-900 focus:outline-none dark:text-slate-100"
       >
         {STEP_LABELS[step]}
       </h2>

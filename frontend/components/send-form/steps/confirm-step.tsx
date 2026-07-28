@@ -56,11 +56,9 @@ type ConfirmStepProps = {
   onBack: () => void;
 };
 
-type SubmitPhase = 'idle' | 'preparing' | 'awaiting-freighter' | 'submitting';
+type SubmitPhase = 'idle' | 'preparing' | 'awaiting-freighter' | 'submitting' | 'success';
 
 export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<SubmitPhase>('idle');
   const [signingModeUsed, setSigningModeUsed] = useState<'freighter-client' | 'backend' | null>(
     null,
@@ -70,6 +68,8 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
+
+  const submitting = submitPhase !== 'idle' && submitPhase !== 'success';
 
   function buildCreateAccountPayload() {
     return {
@@ -87,7 +87,6 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   }
 
   async function executeCreateAccount(attempt: number) {
-    setSubmitting(true);
     setSubmitPhase('preparing');
     setErrorInfo(null);
     setRetryAfter(null);
@@ -116,7 +115,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       }
 
       setClaimUrl(account.claimUrl);
-      setSubmitted(true);
+      setSubmitPhase('success');
     } catch (err) {
       const info = classifyError(err);
       setErrorInfo(info);
@@ -126,8 +125,6 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
         setRetryAfter(null);
       }
       setRetryCount(attempt);
-    } finally {
-      setSubmitting(false);
       setSubmitPhase('idle');
     }
   }
@@ -148,7 +145,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
     return 'Sending…';
   }
 
-  if (submitted) {
+  if (submitPhase === 'success') {
     const claimLink = claimUrl || (typeof window !== 'undefined' ? `${window.location.origin}/claim` : 'https://bridgelet.org/claim');
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Here is your payment claim link via Bridgelet: ${claimLink}`)}`;
 
@@ -156,11 +153,11 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       <div
         role="status"
         aria-live="polite"
-        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 space-y-3"
+        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 space-y-3 dark:border-green-800 dark:bg-green-950"
       >
         <div>
-          <p className="font-medium text-green-800">Payment sent!</p>
-          <p className="mt-1 text-sm text-green-700">
+          <p className="font-medium text-green-800 dark:text-green-300">Payment sent!</p>
+          <p className="mt-1 text-sm text-green-700 dark:text-green-400">
             {state.recipientEmail ? (
               <>
                 A claim link has been sent to <strong>{state.recipientEmail}</strong>.
@@ -173,7 +170,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           </p>
         </div>
         {signingModeUsed === 'freighter-client' && (
-          <p className="mt-2 text-xs text-green-700">
+          <p className="mt-2 text-xs text-green-700 dark:text-green-400">
             Account creation was authorised with Freighter client-side signing.
           </p>
         )}
@@ -192,11 +189,11 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
         )}
 
         {isSupported && claimUrl && (
-          <div className="border-t border-green-200 pt-4">
+          <div className="border-t border-green-200 pt-4 dark:border-green-800">
             <button
               onClick={() => writeUrl(claimUrl)}
               disabled={isWriting}
-              className="inline-flex items-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-800 disabled:opacity-60"
+              className="inline-flex items-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-800 disabled:opacity-60 dark:bg-green-600 dark:hover:bg-green-500"
             >
               <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -208,7 +205,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
               </svg>
               {isWriting ? 'Ready to tap... hold tag to back of phone' : 'Write to NFC Tag'}
             </button>
-            {nfcError && <p className="mt-2 text-xs text-red-600">{nfcError}</p>}
+            {nfcError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{nfcError}</p>}
           </div>
         )}
       </div>
@@ -221,43 +218,43 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
 
   return (
     <div className="space-y-4">
-      <dl className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+      <dl className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800">
         <div className="flex justify-between py-1.5">
-          <dt className="font-medium text-slate-700">From wallet</dt>
-          <dd className="max-w-[56%] break-all text-right font-mono text-xs text-slate-600">
+          <dt className="font-medium text-slate-700 dark:text-slate-300">From wallet</dt>
+          <dd className="max-w-[56%] break-all text-right font-mono text-xs text-slate-600 dark:text-slate-400">
             {state.publicKey}
           </dd>
         </div>
         <div className="flex justify-between py-1.5">
-          <dt className="font-medium text-slate-700">Recipient</dt>
-          <dd className="text-slate-600">
+          <dt className="font-medium text-slate-700 dark:text-slate-300">Recipient</dt>
+          <dd className="text-slate-600 dark:text-slate-400">
             {[state.recipientName, state.recipientEmail].filter(Boolean).join(' — ') ||
               'Not specified'}
           </dd>
         </div>
         <div className="flex justify-between py-1.5">
-          <dt className="font-medium text-slate-700">Amount</dt>
-          <dd className="text-slate-600">
+          <dt className="font-medium text-slate-700 dark:text-slate-300">Amount</dt>
+          <dd className="text-slate-600 dark:text-slate-400">
             {state.amountXlm} {state.assetCode}
           </dd>
         </div>
         {state.memo && (
           <div className="flex justify-between py-1.5">
-            <dt className="font-medium text-slate-700">Memo</dt>
-            <dd className="text-slate-600">{state.memo}</dd>
+            <dt className="font-medium text-slate-700 dark:text-slate-300">Memo</dt>
+            <dd className="text-slate-600 dark:text-slate-400">{state.memo}</dd>
           </div>
         )}
         <div className="flex justify-between py-1.5">
-          <dt className="font-medium text-slate-700">Signing</dt>
-          <dd className="text-slate-600">Freighter (experimental) with backend fallback</dd>
+          <dt className="font-medium text-slate-700 dark:text-slate-300">Signing</dt>
+          <dd className="text-slate-600 dark:text-slate-400">Freighter (experimental) with backend fallback</dd>
         </div>
       </dl>
 
       {errorInfo && (
-        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
           <div className="flex items-start">
             <svg
-              className="mr-2 h-5 w-5 shrink-0 text-red-600"
+              className="mr-2 h-5 w-5 shrink-0 text-red-600 dark:text-red-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -271,10 +268,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
               />
             </svg>
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800">{errorInfo.userMessage}</p>
-              <p className="mt-1 text-sm text-red-700">{errorInfo.suggestion}</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">{errorInfo.userMessage}</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-400">{errorInfo.suggestion}</p>
               {retryAfter !== null && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                   Please wait {retryAfter} second{retryAfter !== 1 ? 's' : ''} before retrying.
                 </p>
               )}
@@ -288,7 +285,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           type="button"
           onClick={onBack}
           disabled={submitting}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           Back
         </button>
@@ -297,7 +294,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
             type="button"
             onClick={handleRetry}
             disabled={submitting}
-            className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:opacity-60"
+            className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500"
           >
             {submitting ? submittingLabel() : `Try Again (${MAX_RETRIES - retryCount} left)`}
           </button>
@@ -306,7 +303,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
             type="button"
             onClick={handleConfirm}
             disabled={submitting}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             {submitting ? submittingLabel() : 'Confirm & Send'}
           </button>
@@ -314,11 +311,11 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       </div>
 
       {errorInfo && retryCount >= MAX_RETRIES && supportEmail && (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Still having trouble?{' '}
           <a
             href={`mailto:${supportEmail}`}
-            className="font-medium text-red-700 underline hover:text-red-800"
+            className="font-medium text-red-700 underline hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
           >
             Contact support
           </a>

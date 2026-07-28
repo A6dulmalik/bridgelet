@@ -35,7 +35,7 @@ export function RateLimitBanner({ retryAfter }: RateLimitBannerProps) {
     <div
       role="alert"
       aria-live="assertive"
-      className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+      className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
     >
       <svg
         aria-hidden="true"

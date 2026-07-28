@@ -83,8 +83,8 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
       />
 
       <div>
-        <label htmlFor="recipient-name" className="block text-sm font-medium text-slate-900">
-          Recipient name <span className="font-normal text-slate-500">(optional)</span>
+        <label htmlFor="recipient-name" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Recipient name <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
         </label>
         <input
           id="recipient-name"
@@ -93,13 +93,13 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
           value={state.recipientName}
           onChange={(e) => onChange({ recipientName: e.target.value })}
           placeholder="e.g. Amina"
-          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-slate-400 dark:focus:ring-slate-400"
         />
       </div>
 
       <div>
-        <label htmlFor="recipient-email" className="block text-sm font-medium text-slate-900">
-          Recipient email <span className="font-normal text-slate-500">(optional)</span>
+        <label htmlFor="recipient-email" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Recipient email <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
         </label>
         <input
           id="recipient-email"
@@ -109,21 +109,21 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
           placeholder="recipient@example.com"
           aria-invalid={errors.recipientEmail ? true : undefined}
           aria-describedby={errors.recipientEmail ? 'recipient-email-error' : undefined}
-          className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 ${
+          className={`mt-1 block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 ${
             errors.recipientEmail
-              ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
-              : 'border-slate-300 focus:border-slate-500 focus:ring-slate-500'
+              ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-600'
+              : 'border-slate-300 focus:border-slate-500 focus:ring-slate-500 dark:border-slate-600 dark:focus:border-slate-400 dark:focus:ring-slate-400'
           }`}
         />
         {errors.recipientEmail && (
-          <p id="recipient-email-error" role="alert" className="mt-1 text-sm text-red-600">
+          <p id="recipient-email-error" role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
             {errors.recipientEmail}
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-slate-900">
+        <label htmlFor="amount" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
           Amount
         </label>
         <div className="mt-1 flex gap-2">
@@ -138,10 +138,10 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
             placeholder="0.00"
             aria-invalid={errors.amountXlm ? true : undefined}
             aria-describedby={errors.amountXlm ? 'amount-error' : undefined}
-            className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 ${
+            className={`block w-full rounded-lg border px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 ${
               errors.amountXlm
-                ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
-                : 'border-slate-300 focus:border-slate-500 focus:ring-slate-500'
+                ? 'border-red-400 focus:border-red-500 focus:ring-red-500 dark:border-red-600'
+                : 'border-slate-300 focus:border-slate-500 focus:ring-slate-500 dark:border-slate-600 dark:focus:border-slate-400 dark:focus:ring-slate-400'
             }`}
           />
           <select
@@ -151,7 +151,7 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
             onChange={(e) => onChange({ assetCode: e.target.value })}
             aria-invalid={errors.assetCode ? true : undefined}
             aria-describedby={errors.assetCode ? 'asset-error' : undefined}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400"
           >
             {SUPPORTED_ASSETS.map((asset) => (
               <option key={asset} value={asset}>
@@ -161,17 +161,17 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
           </select>
         </div>
         {errors.amountXlm && (
-          <p id="amount-error" role="alert" className="mt-1 text-sm text-red-600">
+          <p id="amount-error" role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
             {errors.amountXlm}
           </p>
         )}
         {errors.assetCode && (
-          <p id="asset-error" role="alert" className="mt-1 text-sm text-red-600">
+          <p id="asset-error" role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
             {errors.assetCode}
           </p>
         )}
         {/* Live XLM → USD conversion; hidden when the rate is unavailable */}
-        <p aria-live="polite" className="mt-1 min-h-5 text-sm text-slate-500">
+        <p aria-live="polite" className="mt-1 min-h-5 text-sm text-slate-500 dark:text-slate-400">
           {showConversion && (
             <>
               ≈ {formatFiat(amount, usdRate)} USD
@@ -182,8 +182,8 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
       </div>
 
       <div>
-        <label htmlFor="memo" className="block text-sm font-medium text-slate-900">
-          Memo <span className="font-normal text-slate-500">(optional)</span>
+        <label htmlFor="memo" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Memo <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
         </label>
         <input
           id="memo"
@@ -192,7 +192,7 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
           value={state.memo}
           onChange={(e) => onChange({ memo: e.target.value })}
           placeholder="e.g. Invoice #42"
-          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-slate-400 dark:focus:ring-slate-400"
         />
       </div>
 
@@ -200,13 +200,13 @@ export function DetailsStep({ state, onChange, onBack, onNext }: DetailsStepProp
         <button
           type="button"
           onClick={onBack}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
         >
           Back
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
         >
           Review Payment
         </button>

@@ -14,7 +14,7 @@ export default function HomePage() {
       <div className="space-y-8">
         <HowItWorks intervalMs={3500} />
         <div className="space-y-4">
-          <p className="text-slate-700">Select a flow to continue.</p>
+          <p className="text-slate-700 dark:text-slate-300">Select a flow to continue.</p>
           <nav aria-label="Flow selection" className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/send"

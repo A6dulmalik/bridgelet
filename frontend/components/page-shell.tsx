@@ -16,8 +16,10 @@ export function PageShell({ title, description, children, footer }: PageShellPro
       <SiteNav />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">{title}</h1>
-          <p className="text-base text-slate-700">{description}</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            {title}
+          </h1>
+          <p className="text-base text-slate-700 dark:text-slate-300">{description}</p>
         </header>
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           {children}
