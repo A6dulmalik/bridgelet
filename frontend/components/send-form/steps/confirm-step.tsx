@@ -64,7 +64,6 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [signingModeUsed, setSigningModeUsed] = useState<'freighter-client' | 'backend' | null>(
     null,
   );
-  const [submitted, setSubmitted] = useState(false);
   const [errorInfo, setErrorInfo] = useState<AccountCreationErrorInfo | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);

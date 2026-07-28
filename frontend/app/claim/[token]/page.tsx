@@ -2,9 +2,7 @@ import { PageShell } from '@/components/page-shell';
 import { SharePrompt } from '@/components/share-prompt';
 import { ClaimPageClient } from './claim-page-client';
 import { publicEnv } from '@/lib/env';
-import { AccountStatus } from '@/lib/api/types';
 import { loadClaimView } from '@/lib/claim-view';
-import { ClaimView } from '@/lib/claim-view';
 
 type ClaimPageProps = {
   params: Promise<{ token: string }>;
