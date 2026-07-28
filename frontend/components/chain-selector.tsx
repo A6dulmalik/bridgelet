@@ -16,7 +16,8 @@ export const SUPPORTED_CHAINS: ChainOption[] = [
 ];
 
 type ChainSelectorProps = {
-  selectedChainId: string;
+  /** Currently selected chain ID. Defaults to "stellar". */
+  selectedChainId?: string;
   onSelectChain?: (chainId: string) => void;
   label?: string;
 };
@@ -28,14 +29,14 @@ export function ChainSelector({
 }: ChainSelectorProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor="chain-selector" className="block text-sm font-medium text-slate-900">
+      <label htmlFor="chain-selector" className="block text-sm font-medium text-slate-900 dark:text-slate-100">
         {label}
       </label>
       <select
         id="chain-selector"
         value={selectedChainId}
         onChange={(e) => onSelectChain?.(e.target.value)}
-        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400"
       >
         {SUPPORTED_CHAINS.map((chain) => (
           <option
@@ -47,7 +48,7 @@ export function ChainSelector({
           </option>
         ))}
       </select>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
         Bridgelet currently operates on the <strong>Stellar</strong> network. Multi-chain EVM & Soroban support is under development.
       </p>
     </div>

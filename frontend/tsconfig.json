@@ -21,7 +21,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "types": ["jest", "node"],
+    "types": ["vitest/globals", "node"],
     "plugins": [
       {
         "name": "next"
