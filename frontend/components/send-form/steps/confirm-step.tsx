@@ -148,32 +148,50 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   }
 
   if (submitted) {
+    const claimLink = claimUrl || (typeof window !== 'undefined' ? `${window.location.origin}/claim` : 'https://bridgelet.org/claim');
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Here is your payment claim link via Bridgelet: ${claimLink}`)}`;
+
     return (
       <div
         role="status"
         aria-live="polite"
-        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4"
+        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 space-y-3"
       >
-        <p className="font-medium text-green-800">Payment sent!</p>
-        <p className="mt-1 text-sm text-green-700">
-          {state.recipientEmail ? (
-            <>
-              A claim link has been sent to <strong>{state.recipientEmail}</strong>.
-            </>
-          ) : (
-            <>Your claim link is ready to share with your recipient.</>
-          )}{' '}
-          They have {formatExpiryLabel(state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)} to claim
-          their funds.
-        </p>
+        <div>
+          <p className="font-medium text-green-800">Payment sent!</p>
+          <p className="mt-1 text-sm text-green-700">
+            {state.recipientEmail ? (
+              <>
+                A claim link has been sent to <strong>{state.recipientEmail}</strong>.
+              </>
+            ) : (
+              <>Your claim link is ready to share with your recipient.</>
+            )}{' '}
+            They have {formatExpiryLabel(state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)} to claim
+            their funds.
+          </p>
+        </div>
         {signingModeUsed === 'freighter-client' && (
           <p className="mt-2 text-xs text-green-700">
             Account creation was authorised with Freighter client-side signing.
           </p>
         )}
 
+        {claimUrl && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700"
+            >
+              <span>Share via WhatsApp</span>
+            </a>
+          </div>
+        )}
+
         {isSupported && claimUrl && (
-          <div className="mt-4 border-t border-green-200 pt-4">
+          <div className="border-t border-green-200 pt-4">
             <button
               onClick={() => writeUrl(claimUrl)}
               disabled={isWriting}
