@@ -2,7 +2,6 @@ import { PageShell } from '@/components/page-shell';
 import { SharePrompt } from '@/components/share-prompt';
 import { ClaimPageClient } from './claim-page-client';
 import { publicEnv } from '@/lib/env';
-import { loadClaimView } from '@/lib/claim-view';
 
 type ClaimPageProps = {
   params: Promise<{ token: string }>;
@@ -10,7 +9,10 @@ type ClaimPageProps = {
 
 export default async function ClaimPage({ params }: ClaimPageProps) {
   const { token } = await params;
-  const initialView = await loadClaimView(token);
+
+  // Skip the server-side fetch to avoid blocking SSR on slow/unreachable API calls.
+  // The client component re-fetches after hydration.
+  const initialView = undefined;
 
   return (
     <PageShell

@@ -19,7 +19,6 @@ export function ClaimPageClient({ token, supportEmail, initialView }: ClaimPageC
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    if (initialView) return;
     let cancelled = false;
     loadClaimView(token)
       .then((result) => {
@@ -31,7 +30,7 @@ export function ClaimPageClient({ token, supportEmail, initialView }: ClaimPageC
     return () => {
       cancelled = true;
     };
-  }, [token, initialView]);
+  }, [token]);
 
   async function handleClaim(destinationAddress: string) {
     const result = await client.redeemClaim(token, destinationAddress);
