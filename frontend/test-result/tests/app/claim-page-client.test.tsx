@@ -68,7 +68,20 @@ describe('ClaimPageClient', () => {
     expect(screen.getByText(/loading claim details/i)).toBeInTheDocument();
   });
 
-  it('does not fetch when initialView is provided', async () => {
+  it('re-fetches even when initialView is provided', async () => {
+    mockedFetchWithTimeout.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        valid: true,
+        status: AccountStatus.PENDING_CLAIM,
+        amountStroops: '10000000',
+        assetCode: 'XLM',
+        expiresAt: '2026-08-01T12:00:00Z',
+      }),
+      headers: new Headers(),
+    } as Response);
+
     render(
       <ClaimPageClient
         token="test-token"
@@ -76,7 +89,13 @@ describe('ClaimPageClient', () => {
         initialView={{ status: AccountStatus.PENDING_CLAIM }}
       />,
     );
-    expect(mockedFetchWithTimeout).not.toHaveBeenCalled();
+    expect(screen.getByTestId('status')).toHaveTextContent(AccountStatus.PENDING_CLAIM);
+    await waitFor(() => {
+      expect(mockedFetchWithTimeout).toHaveBeenCalledWith(
+        '/claims/verify',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
   });
 
   it('maps API failure to FAILED status when initialView is not provided', async () => {
