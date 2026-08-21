@@ -30,10 +30,12 @@ Bridgelet is designed as infrastructure, not an end-user wallet or disbursement 
 * **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk)**: Backend SDK and API (NestJS + TypeScript)
 * **bridgelet-ui**: Reference UI demonstrating SDK integration (Next.js 16+, TypeScript, Tailwind CSS)
   └─ Located in `frontend/` within this repository
+* **bridgelet-mobile**: Native cross-platform mobile client (React Native, Expo, TypeScript)
+  └─ Located in `mobile/` within this repository (Active/In-Progress roadmap component)
 
 ## Repository Structure
 
-This is a monorepo containing both the docs and frontend reference implementation:
+This is a monorepo containing the docs, frontend reference implementation, and mobile application:
 
 ```text
 bridgelet/
@@ -42,6 +44,10 @@ bridgelet/
 │   ├── components/   # Reusable UI components
 │   ├── lib/          # Utilities and SDK wrappers
 │   └── ...
+├── mobile/           # React Native / Expo Mobile Application
+│   ├── app/          # Expo router screens
+│   ├── services/     # Logger & storage services
+│   └── README.md     # Mobile app documentation
 └── docs/             # Technical specifications and guides
 ```
 

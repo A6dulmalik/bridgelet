@@ -40,7 +40,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '4',
     title: 'Reminder: Meeting at 3pm',
-    body: 'Don't forget your scheduled call.',
+    body: "Don't forget your scheduled call.",
     read: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
   },
@@ -49,21 +49,21 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 const countUnread = (notifications: Notification[]) =>
   notifications.filter((n) => !n.read).length;
 
-export const useNotificationStore = create<NotificationStore>((set) => ({
+export const useNotificationStore = create((set: any) => ({
   notifications: MOCK_NOTIFICATIONS,
   unreadCount: countUnread(MOCK_NOTIFICATIONS),
 
-  markAsRead: (id) =>
-    set((state) => {
-      const updated = state.notifications.map((n) =>
+  markAsRead: (id: string) =>
+    set((state: NotificationStore) => {
+      const updated = state.notifications.map((n: Notification) =>
         n.id === id ? { ...n, read: true } : n,
       );
       return { notifications: updated, unreadCount: countUnread(updated) };
     }),
 
   markAllAsRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, read: true })),
+    set((state: NotificationStore) => ({
+      notifications: state.notifications.map((n: Notification) => ({ ...n, read: true })),
       unreadCount: 0,
     })),
 }));

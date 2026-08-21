@@ -12,7 +12,7 @@ const MAX_BADGE_COUNT = 9;
  * Pass the result directly to Expo Router's `tabBarBadge` prop.
  */
 export function useNotificationBadge(): string | undefined {
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const unreadCount = useNotificationStore((state: { unreadCount: number }) => state.unreadCount);
 
   if (unreadCount <= 0) return undefined;
   if (unreadCount > MAX_BADGE_COUNT) return '9+';
