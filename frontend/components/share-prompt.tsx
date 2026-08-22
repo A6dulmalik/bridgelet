@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { NfcShareButton } from './nfc-share-button';
+import { QRCodeModalButton } from './qr-code';
 
 type SharePromptProps = {
   appUrl: string;
@@ -49,7 +50,10 @@ export function SharePrompt({ appUrl }: SharePromptProps) {
       </div>
 
       <div className="pt-1 flex flex-col gap-3">
-        <NfcShareButton claimUrl={appUrl} />
+        <div className="flex flex-wrap items-center gap-2">
+          <NfcShareButton claimUrl={appUrl} />
+          <QRCodeModalButton claimUrl={appUrl} />
+        </div>
 
         <div className="flex flex-wrap gap-4">
           <a
