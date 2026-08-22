@@ -7,6 +7,9 @@
     "release": true,
     "releaseName": "v${version}"
   },
+  "hooks": {
+    "before:git:release": "node scripts/check-compatibility-doc.mjs"
+  },
   "plugins": {
     "@release-it/conventional-changelog": {
       "preset": "conventionalcommits",

@@ -8,7 +8,9 @@
   },
   "scripts": {
     "build": "npm --prefix frontend run build",
-    "test": "echo \"Run npm test inside frontend/ for app tests\" && exit 0"
+    "test": "echo \"Run npm test inside frontend/ for app tests\" && exit 0",
+    "check:compatibility": "node scripts/check-compatibility-doc.mjs",
+    "check:sdk-contract": "node scripts/check-sdk-contract.mjs"
   },
   "repository": {
     "type": "git",
@@ -16,12 +18,17 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC", 
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/okekefrancis112/bridgelet/issues"
   },
   "homepage": "https://github.com/okekefrancis112/bridgelet#readme",
   "dependencies": {
     "puppeteer": "^24.36.0"
+  },
+  "bridgeletCompatibility": {
+    "description": "Pinned bridgelet-sdk/bridgelet-core versions this repo is verified against. See compatibility.json (source of truth) and docs/compatibility.md (matrix + process).",
+    "manifest": "compatibility.json",
+    "docs": "docs/compatibility.md"
   }
 }

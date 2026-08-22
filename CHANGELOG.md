@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Cross-repo compatibility matrix (`docs/compatibility.md`, `compatibility.json`) documenting which frontend releases are verified against which `bridgelet-sdk` / `bridgelet-core` versions, a `compatibility.yml` CI job that checks out the pinned `bridgelet-sdk` commit and fails the build if its live OpenAPI spec no longer has an endpoint or field the frontend's API client depends on (`scripts/check-sdk-contract.mjs`), and a `release-it` `before:git:release` hook (`scripts/check-compatibility-doc.mjs`) that blocks tagging a release until the matrix has been updated
 - Playwright E2E suite for the reference UI (`frontend/playwright.config.ts`, `frontend/e2e/`) targeting `localhost:3000`, with `test:e2e` / `test:e2e:ui` scripts and Frontend CI running E2E against the built Next.js app
 - Initial MVP implementation of Bridgelet for ephemeral Stellar accounts
 - **bridgelet-core**: Soroban smart contracts for on-chain account restrictions, sweep logic, and event emission ([bridgelet-core](https://github.com/bridgelet-org/bridgelet-core))
