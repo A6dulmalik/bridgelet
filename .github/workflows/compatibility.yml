@@ -182,7 +182,21 @@ jobs:
           ENCRYPTION_KEY: '9ef61d8fe679ea10433353f5488a91eabbaf831d9f8e422ba8f89636778683ed'
           CLAIM_TOKEN_EXPIRY: '2592000'
         run: |
-          nohup npm run start > ../bridgelet-sdk.log 2>&1 &
+          # Don't assume `npm run start` (node dist/main.js) is correct:
+          # bridgelet-sdk's tsconfig.build.json doesn't exclude the
+          # top-level scripts/ directory, so tsc's inferred rootDir is the
+          # project root rather than src/, and `nest build` actually emits
+          # dist/src/main.js, not dist/main.js. Their own CI never runs the
+          # built output (only `npm run build`), so this drifted unnoticed.
+          # Locate the real entry point instead of hardcoding the path.
+          ENTRY=$(find dist -name main.js -not -path '*/node_modules/*' | head -1)
+          if [ -z "$ENTRY" ]; then
+            echo "::error::Could not find a built main.js under dist/ after 'npm run build'."
+            find dist -maxdepth 3 || true
+            exit 1
+          fi
+          echo "Starting bridgelet-sdk via: node $ENTRY"
+          nohup node "$ENTRY" > ../bridgelet-sdk.log 2>&1 &
           echo $! > ../bridgelet-sdk.pid
 
       - name: Wait for bridgelet-sdk to become healthy
