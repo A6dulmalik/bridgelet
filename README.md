@@ -64,6 +64,7 @@ Comprehensive documentation is available in the [`/docs`](./docs) directory:
 | [💡 Use Cases & Examples](https://github.com/bridgelet-org/bridgelet/raw/main/docs/use-cases.pdf)      | Real-world use cases and examples                |
 | [📋 MVP Specification](https://github.com/bridgelet-org/bridgelet/raw/main/docs/mvp-specification.pdf) | Minimum viable product requirements              |
 | [🧪 Testing Guide](./TESTING.md)                                                                       | Testing strategy, Lighthouse CI, and guidelines  |
+| [🔗 Compatibility Matrix](./docs/compatibility.md)                                                     | Which frontend releases are verified against which bridgelet-sdk / bridgelet-core versions |
 | [🔐 Freighter Sender Signing Experiment](./docs/experiments/freighter-sender-signing.md)               | Client-side Freighter signing for account creation |
 
 > **📌 Note:** If PDFs don't render in your browser, click the links above to download them directly, or see the [docs directory](./docs) for more information.
@@ -110,6 +111,12 @@ For backend or smart contract development, please refer to the specific reposito
 - **[bridgelet-sdk](https://github.com/bridgelet-org/bridgelet-sdk)** - Backend SDK (NestJS + TypeScript)
 - **[bridgelet-core](https://github.com/bridgelet-org/bridgelet-core)** - Smart contracts (Soroban + Rust)
 - **bridgelet** - Reference UI implementation and documentation (This repository)
+
+Each repo is versioned and released independently — see the
+[Compatibility Matrix](./docs/compatibility.md) for which combinations of
+frontend / `bridgelet-sdk` / `bridgelet-core` versions are known to work
+together, and [`.github/workflows/compatibility.yml`](./.github/workflows/compatibility.yml)
+for the CI job that verifies it.
 
 ## MVP Scope (v0.1)
 
