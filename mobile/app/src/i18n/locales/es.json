@@ -1,0 +1,85 @@
+{
+  "common": {
+    "loading": "Cargando…",
+    "error": "Algo salió mal",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Listo",
+    "save": "Guardar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "share": "Compartir"
+  },
+  "onboarding": {
+    "title": "Bienvenido a Bridgelet",
+    "subtitle": "Envía y recibe pagos Stellar en cualquier lugar, al instante.",
+    "getStarted": "Comenzar",
+    "alreadyHaveWallet": "Ya tengo una billetera"
+  },
+  "claim": {
+    "title": "Reclamar Pago",
+    "subtitle": "Escanea o ingresa un código de reclamación de Bridgelet para recibir fondos.",
+    "inputLabel": "Código de Reclamación",
+    "inputPlaceholder": "Ingresa o pega tu código de reclamación",
+    "scanQr": "Escanear código QR",
+    "claimButton": "Reclamar Fondos",
+    "claiming": "Reclamando…",
+    "successTitle": "¡Pago Reclamado!",
+    "successMessage": "{{amount}} {{asset}} se ha añadido a tu billetera.",
+    "errorInvalid": "Código de reclamación inválido o expirado.",
+    "errorAlreadyClaimed": "Este pago ya fue reclamado.",
+    "newWalletPrompt": "¿Sin billetera? Te crearemos una.",
+    "existingWalletPrompt": "Reclama en tu billetera existente."
+  },
+  "send": {
+    "title": "Enviar Pago",
+    "recipientLabel": "Destinatario",
+    "recipientPlaceholder": "Dirección Stellar o ID de Bridgelet",
+    "amountLabel": "Monto",
+    "amountPlaceholder": "0.00",
+    "assetLabel": "Activo",
+    "memoLabel": "Nota (opcional)",
+    "memoPlaceholder": "Añade una nota",
+    "sendButton": "Enviar",
+    "sending": "Enviando…",
+    "successTitle": "¡Pago Enviado!",
+    "successMessage": "{{amount}} {{asset}} enviado a {{recipient}}.",
+    "errorInsufficientFunds": "Fondos insuficientes.",
+    "errorInvalidAddress": "Dirección de destinatario inválida.",
+    "reviewTitle": "Revisar Pago",
+    "fee": "Comisión de red"
+  },
+  "wallet": {
+    "balance": "Saldo",
+    "address": "Tu Dirección",
+    "noBalance": "Sin saldo aún",
+    "assets": "Activos",
+    "history": "Historial de Transacciones",
+    "noHistory": "Sin transacciones aún"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "theme": "Tema",
+    "security": "Seguridad",
+    "about": "Acerca de",
+    "version": "Versión {{version}}",
+    "logout": "Cerrar sesión"
+  },
+  "security": {
+    "title": "Seguridad",
+    "biometrics": "Usar Biometría",
+    "pin": "Establecer PIN",
+    "backup": "Respaldar Billetera",
+    "backupWarning": "Guarda tu frase de recuperación en un lugar seguro. Cualquiera que la tenga puede acceder a tus fondos."
+  },
+  "errors": {
+    "networkError": "Error de red. Por favor verifica tu conexión.",
+    "timeout": "La solicitud tardó demasiado. Inténtalo de nuevo.",
+    "unknown": "Ocurrió un error inesperado."
+  }
+}

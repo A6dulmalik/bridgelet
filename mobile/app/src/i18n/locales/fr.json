@@ -1,0 +1,85 @@
+{
+  "common": {
+    "loading": "Chargement…",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé",
+    "save": "Enregistrer",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "share": "Partager"
+  },
+  "onboarding": {
+    "title": "Bienvenue sur Bridgelet",
+    "subtitle": "Envoyez et recevez des paiements Stellar partout, instantanément.",
+    "getStarted": "Commencer",
+    "alreadyHaveWallet": "J'ai déjà un portefeuille"
+  },
+  "claim": {
+    "title": "Réclamer un Paiement",
+    "subtitle": "Scannez ou entrez un code de réclamation Bridgelet pour recevoir des fonds.",
+    "inputLabel": "Code de Réclamation",
+    "inputPlaceholder": "Entrez ou collez votre code de réclamation",
+    "scanQr": "Scanner le QR Code",
+    "claimButton": "Réclamer les Fonds",
+    "claiming": "Réclamation en cours…",
+    "successTitle": "Paiement Réclamé !",
+    "successMessage": "{{amount}} {{asset}} a été ajouté à votre portefeuille.",
+    "errorInvalid": "Code de réclamation invalide ou expiré.",
+    "errorAlreadyClaimed": "Ce paiement a déjà été réclamé.",
+    "newWalletPrompt": "Pas encore de portefeuille ? Nous en créerons un pour vous.",
+    "existingWalletPrompt": "Réclamez sur votre portefeuille existant."
+  },
+  "send": {
+    "title": "Envoyer un Paiement",
+    "recipientLabel": "Destinataire",
+    "recipientPlaceholder": "Adresse Stellar ou ID Bridgelet",
+    "amountLabel": "Montant",
+    "amountPlaceholder": "0.00",
+    "assetLabel": "Actif",
+    "memoLabel": "Mémo (optionnel)",
+    "memoPlaceholder": "Ajouter une note",
+    "sendButton": "Envoyer",
+    "sending": "Envoi en cours…",
+    "successTitle": "Paiement Envoyé !",
+    "successMessage": "{{amount}} {{asset}} envoyé à {{recipient}}.",
+    "errorInsufficientFunds": "Fonds insuffisants.",
+    "errorInvalidAddress": "Adresse du destinataire invalide.",
+    "reviewTitle": "Vérifier le Paiement",
+    "fee": "Frais de réseau"
+  },
+  "wallet": {
+    "balance": "Solde",
+    "address": "Votre Adresse",
+    "noBalance": "Pas encore de solde",
+    "assets": "Actifs",
+    "history": "Historique des Transactions",
+    "noHistory": "Pas encore de transactions"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "security": "Sécurité",
+    "about": "À propos",
+    "version": "Version {{version}}",
+    "logout": "Déconnexion"
+  },
+  "security": {
+    "title": "Sécurité",
+    "biometrics": "Utiliser la Biométrie",
+    "pin": "Définir un PIN",
+    "backup": "Sauvegarder le Portefeuille",
+    "backupWarning": "Conservez votre phrase de récupération en lieu sûr. Quiconque la possède peut accéder à vos fonds."
+  },
+  "errors": {
+    "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "timeout": "La requête a expiré. Veuillez réessayer.",
+    "unknown": "Une erreur inattendue s'est produite."
+  }
+}
