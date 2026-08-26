@@ -5,6 +5,11 @@ All notable changes to Bridgelet will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Release process:** changelog entries are generated automatically from
+> conventional commits on release (`npm run release`, via release-it +
+> `@release-it/conventional-changelog`). Manual edits are an explicit override
+> of the generated output — see the Releases section of CONTRIBUTING.md.
+
 ## [Unreleased]
 
 ### Added
