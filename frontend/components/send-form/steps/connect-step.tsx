@@ -36,17 +36,24 @@ export function ConnectStep({ publicKey, onConnected, extensionSupportedOverride
   const [status, setStatus] = useState<'idle' | 'connecting' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  // Start with `true` so server-rendered HTML always shows the connect button.
-  // After the client hydrates we re-check and may switch to the fallback banner.
-  // This prevents a hydration mismatch because both server and client agree on
-  // the initial render; the fallback only appears after a client-side effect.
+  // Start with `true` so server-rendered HTML always shows the connect button,
+  // preventing a hydration mismatch (useState lazy initializers run on the server
+  // in Next.js App Router SSR). After mount we only switch to `false` when the
+  // environment genuinely doesn't support extensions — never back to `true` —
+  // so no spurious re-render occurs in Chromium where the check returns `true`.
   const [extensionSupported, setExtensionSupported] = useState<boolean>(true);
 
   useEffect(() => {
-    if (extensionSupportedOverride !== undefined) {
-      setExtensionSupported(extensionSupportedOverride);
-    } else {
-      setExtensionSupported(isBrowserExtensionSupported());
+    const supported =
+      extensionSupportedOverride !== undefined
+        ? extensionSupportedOverride
+        : isBrowserExtensionSupported();
+    // Only update (and re-render) when the result is false — i.e. we need to
+    // swap from the connect button to the fallback banner. In Chromium this is
+    // always true so setExtensionSupported is never called and the button stays
+    // stable in the DOM, which is critical for Playwright click reliability.
+    if (!supported) {
+      setExtensionSupported(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally runs once after mount
