@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { SendFormState } from '../index';
 import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError } from '@/lib/api/client';
 import { createEphemeralAccount, type EphemeralAccount } from '@/lib/bridgelet';
+import { estimateCreateAccountFee } from '@/lib/fee-estimation';
+import { getXlmUsdRate } from '@/lib/xlm-price';
 import {
   FreighterSenderSigningError,
   toCreateAccountRequestWithFreighterSignature,
@@ -58,6 +60,12 @@ type ConfirmStepProps = {
 
 type SubmitPhase = 'idle' | 'preparing' | 'awaiting-freighter' | 'submitting' | 'success';
 
+interface FeeDisplay {
+  xlm: string;
+  fiat: string | null;
+  capacityUsage: number;
+}
+
 export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [submitPhase, setSubmitPhase] = useState<SubmitPhase>('idle');
   const [signingModeUsed, setSigningModeUsed] = useState<'freighter-client' | 'backend' | null>(
@@ -68,6 +76,34 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
+
+  // Fee estimation state
+  const [feeDisplay, setFeeDisplay] = useState<FeeDisplay | null>(null);
+  const [feeLoading, setFeeLoading] = useState(true);
+  const [feeError, setFeeError] = useState<string | null>(null);
+
+  const fetchFee = useCallback(async () => {
+    setFeeLoading(true);
+    setFeeError(null);
+    try {
+      const xlmRate = await getXlmUsdRate();
+      const fee = await estimateCreateAccountFee(xlmRate > 0 ? xlmRate : null);
+      setFeeDisplay({ xlm: fee.xlm, fiat: fee.fiat, capacityUsage: fee.capacityUsage });
+    } catch {
+      setFeeError('Could not fetch fee estimate. Network fee may apply.');
+    } finally {
+      setFeeLoading(false);
+    }
+  }, []);
+
+  // Fetch fee on mount and refresh every 30 seconds while idle
+  useEffect(() => {
+    fetchFee();
+    const interval = setInterval(() => {
+      if (submitPhase === 'idle') fetchFee();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchFee, submitPhase]);
 
   const submitting = submitPhase !== 'idle' && submitPhase !== 'success';
 
@@ -244,11 +280,76 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
             <dd className="text-slate-600 dark:text-slate-400">{state.memo}</dd>
           </div>
         )}
+        {/* Issue #425 — expiry summary */}
+        <div className="flex justify-between py-1.5">
+          <dt className="font-medium text-slate-700 dark:text-slate-300">Claim expires</dt>
+          <dd className="text-slate-600 dark:text-slate-400">
+            {formatExpiryLabel(state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)} from now
+          </dd>
+        </div>
         <div className="flex justify-between py-1.5">
           <dt className="font-medium text-slate-700 dark:text-slate-300">Signing</dt>
           <dd className="text-slate-600 dark:text-slate-400">Freighter (experimental) with backend fallback</dd>
         </div>
       </dl>
+
+      {/* Issue #426 — fee estimation */}
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Estimated network fee
+          </span>
+          <button
+            type="button"
+            onClick={fetchFee}
+            disabled={feeLoading}
+            aria-label="Refresh fee estimate"
+            className="rounded p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-40 dark:text-slate-500 dark:hover:text-slate-200"
+          >
+            {/* Refresh icon */}
+            <svg
+              className={`h-4 w-4 ${feeLoading ? 'animate-spin' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div aria-live="polite" className="mt-1">
+          {feeLoading && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Fetching fee estimate…</p>
+          )}
+          {!feeLoading && feeError && (
+            <p className="text-sm text-amber-700 dark:text-amber-400">{feeError}</p>
+          )}
+          {!feeLoading && feeDisplay && (
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                {feeDisplay.xlm} XLM
+                {feeDisplay.fiat && (
+                  <span className="ml-2 font-normal text-slate-500 dark:text-slate-400">
+                    {feeDisplay.fiat}
+                  </span>
+                )}
+              </p>
+              {feeDisplay.capacityUsage > 0.8 && (
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Network is currently busy — fees may be higher than usual.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {errorInfo && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
