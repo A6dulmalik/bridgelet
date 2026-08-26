@@ -65,25 +65,25 @@ describe('parseCsv', () => {
   it('parses a CSV without a header row', () => {
     const rows = parseCsv('Alice,alice@example.com,10,XLM\nBob,bob@example.com,5,USDC');
     expect(rows).toHaveLength(2);
-    expect(rows[0].name).toBe('Alice');
-    expect(rows[1].assetCode).toBe('USDC');
+    expect(rows[0]!.name).toBe('Alice');
+    expect(rows[1]!.assetCode).toBe('USDC');
   });
 
   it('skips a header row starting with "name"', () => {
     const rows = parseCsv('name,email,amount,asset\nAlice,,10,XLM');
     expect(rows).toHaveLength(1);
-    expect(rows[0].name).toBe('Alice');
+    expect(rows[0]!.name).toBe('Alice');
   });
 
   it('defaults asset to XLM when column is missing', () => {
     const rows = parseCsv('Alice,,10,');
-    expect(rows[0].assetCode).toBe('XLM');
+    expect(rows[0]!.assetCode).toBe('XLM');
   });
 
   it('strips surrounding quotes from values', () => {
     const rows = parseCsv('"Alice","alice@example.com","10","XLM"');
-    expect(rows[0].name).toBe('Alice');
-    expect(rows[0].email).toBe('alice@example.com');
+    expect(rows[0]!.name).toBe('Alice');
+    expect(rows[0]!.email).toBe('alice@example.com');
   });
 
   it('respects the MAX_ROWS cap of 100', () => {

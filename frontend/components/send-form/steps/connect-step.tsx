@@ -35,9 +35,21 @@ function isBrowserExtensionSupported(): boolean {
 export function ConnectStep({ publicKey, onConnected, extensionSupportedOverride }: ConnectStepProps) {
   const [status, setStatus] = useState<'idle' | 'connecting' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [extensionSupported] = useState<boolean>(() =>
-    extensionSupportedOverride !== undefined ? extensionSupportedOverride : isBrowserExtensionSupported(),
-  );
+
+  // Start with `true` so server-rendered HTML always shows the connect button.
+  // After the client hydrates we re-check and may switch to the fallback banner.
+  // This prevents a hydration mismatch because both server and client agree on
+  // the initial render; the fallback only appears after a client-side effect.
+  const [extensionSupported, setExtensionSupported] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (extensionSupportedOverride !== undefined) {
+      setExtensionSupported(extensionSupportedOverride);
+    } else {
+      setExtensionSupported(isBrowserExtensionSupported());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally runs once after mount
 
   // On mount, restore a previously persisted wallet so the user doesn't
   // have to re-connect every time they navigate back through the flow.
