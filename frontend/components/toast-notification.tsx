@@ -7,9 +7,9 @@ export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 type ToastNotificationProps = {
   message: string;
   variant?: ToastVariant;
-  /** Auto-dismiss after this many ms. Set to 0 to disable. */
   duration?: number;
   onDismiss?: () => void;
+  action?: { label: string; onClick: () => void };
 };
 
 const VARIANT_STYLES: Record<ToastVariant, string> = {
@@ -31,6 +31,7 @@ export function ToastNotification({
   variant = 'info',
   duration = 5000,
   onDismiss,
+  action,
 }: ToastNotificationProps) {
   const [visible, setVisible] = useState(true);
 
@@ -54,6 +55,15 @@ export function ToastNotification({
         {ICONS[variant]}
       </span>
       <p className="flex-1">{message}</p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="rounded-md bg-current/10 px-2 py-0.5 text-xs font-semibold transition hover:bg-current/20"
+        >
+          {action.label}
+        </button>
+      )}
       <button
         type="button"
         onClick={() => {
