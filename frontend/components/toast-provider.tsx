@@ -7,10 +7,16 @@ type Toast = {
   id: string;
   message: string;
   variant: ToastVariant;
+  action?: { label: string; onClick: () => void };
+  duration?: number;
 };
 
 type ToastContextValue = {
-  showToast: (message: string, variant?: ToastVariant) => void;
+  showToast: (
+    message: string,
+    variant?: ToastVariant,
+    options?: { action?: Toast['action']; duration?: number },
+  ) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -25,11 +31,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    (message: string, variant: ToastVariant = 'info') => {
+    (
+      message: string,
+      variant: ToastVariant = 'info',
+      options?: { action?: Toast['action']; duration?: number },
+    ) => {
       const id = `toast-${++nextId}`;
-      setToasts((prev) => [...prev, { id, message, variant }]);
+      const duration = options?.duration ?? 5000;
+      setToasts((prev) => [...prev, { id, message, variant, action: options?.action, duration }]);
+
+      if (duration > 0) {
+        setTimeout(() => removeToast(id), duration);
+      }
     },
-    [],
+    [removeToast],
   );
 
   const value = useMemo(() => ({ showToast }), [showToast]);
@@ -49,6 +64,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               message={toast.message}
               variant={toast.variant}
               onDismiss={() => removeToast(toast.id)}
+              action={toast.action}
             />
           </div>
         ))}
