@@ -54,6 +54,18 @@ export function DevToolbar() {
   // Avoid rendering until hydrated so the radio group shows the correct value.
   if (!mounted) return null;
 
+  // Skip rendering under browser automation (Playwright, Selenium, Puppeteer,
+  // etc. all set navigator.webdriver = true; real users never do). This
+  // toolbar is dev-only tooling for manually switching MSW scenarios — the
+  // E2E suite selects its scenario via the URL token instead
+  // (e.g. /claim/expired-e2e-test-token), so the toolbar isn't needed
+  // during automated runs. Without this check, the fixed bottom-4 right-4
+  // panel renders during E2E too (next dev still has
+  // NODE_ENV === 'development'), and on the shorter mobile viewports it
+  // overlaps and intercepts clicks on real submit buttons (e.g. "Review
+  // Payment" / "Continue"), causing spurious mobile-only E2E failures.
+  if (typeof navigator !== 'undefined' && navigator.webdriver) return null;
+
   if (collapsed) {
     return (
       <button
