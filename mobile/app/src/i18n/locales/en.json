@@ -1,0 +1,85 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "save": "Save",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "share": "Share"
+  },
+  "onboarding": {
+    "title": "Welcome to Bridgelet",
+    "subtitle": "Send and receive Stellar payments anywhere, instantly.",
+    "getStarted": "Get Started",
+    "alreadyHaveWallet": "I already have a wallet"
+  },
+  "claim": {
+    "title": "Claim Payment",
+    "subtitle": "Scan or enter a Bridgelet claim code to receive funds.",
+    "inputLabel": "Claim Code",
+    "inputPlaceholder": "Enter or paste your claim code",
+    "scanQr": "Scan QR Code",
+    "claimButton": "Claim Funds",
+    "claiming": "Claiming…",
+    "successTitle": "Payment Claimed!",
+    "successMessage": "{{amount}} {{asset}} has been added to your wallet.",
+    "errorInvalid": "Invalid or expired claim code.",
+    "errorAlreadyClaimed": "This payment has already been claimed.",
+    "newWalletPrompt": "No wallet yet? We'll create one for you.",
+    "existingWalletPrompt": "Claim to your existing wallet."
+  },
+  "send": {
+    "title": "Send Payment",
+    "recipientLabel": "Recipient",
+    "recipientPlaceholder": "Stellar address or Bridgelet ID",
+    "amountLabel": "Amount",
+    "amountPlaceholder": "0.00",
+    "assetLabel": "Asset",
+    "memoLabel": "Memo (optional)",
+    "memoPlaceholder": "Add a note",
+    "sendButton": "Send",
+    "sending": "Sending…",
+    "successTitle": "Payment Sent!",
+    "successMessage": "{{amount}} {{asset}} sent to {{recipient}}.",
+    "errorInsufficientFunds": "Insufficient funds.",
+    "errorInvalidAddress": "Invalid recipient address.",
+    "reviewTitle": "Review Payment",
+    "fee": "Network fee"
+  },
+  "wallet": {
+    "balance": "Balance",
+    "address": "Your Address",
+    "noBalance": "No balance yet",
+    "assets": "Assets",
+    "history": "Transaction History",
+    "noHistory": "No transactions yet"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "security": "Security",
+    "about": "About",
+    "version": "Version {{version}}",
+    "logout": "Log Out"
+  },
+  "security": {
+    "title": "Security",
+    "biometrics": "Use Biometrics",
+    "pin": "Set PIN",
+    "backup": "Backup Wallet",
+    "backupWarning": "Store your recovery phrase somewhere safe. Anyone with it can access your funds."
+  },
+  "errors": {
+    "networkError": "Network error. Please check your connection.",
+    "timeout": "Request timed out. Please try again.",
+    "unknown": "An unexpected error occurred."
+  }
+}
