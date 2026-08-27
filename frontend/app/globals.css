@@ -63,3 +63,33 @@ body {
     animation: none;
   }
 }
+
+/* Issue #467: Visible focus indicators for keyboard-only navigation.
+   A high-contrast outline is shown whenever an element is focused via the
+   keyboard, and hidden for mouse/touch users who already see the active
+   interaction clearly. This ensures WCAG 2.1 AA 2.4.7 (Focus Visible). */
+:focus-visible {
+  outline: 3px solid theme(--color-indigo-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Scroll-linked skip link for keyboard users jumping past repeated
+   navigation (WCAG 2.4.1 Bypass Blocks). Revealed only on keyboard focus. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 50;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
+/* Ensure toggled/selected elements are announced to screen readers. */
+[aria-pressed='true'],
+[aria-current='page'] {
+  outline: none;
+}
