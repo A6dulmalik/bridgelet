@@ -85,6 +85,10 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
+  // Issue #422 — timestamp captured the moment the account was created, used
+  // to compute the claim link's absolute expiration deadline.
+  const [successAt, setSuccessAt] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
 
   // Issue #421 — pending/timeout UI state. `pendingConfirmation` flips the
@@ -186,6 +190,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       }
 
       setClaimUrl(account.claimUrl);
+      setSuccessAt(Date.now());
       setSubmitPhase('success');
     } catch (err) {
       const info = classifyError(err);
@@ -202,6 +207,19 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
 
   function handleConfirm() {
     executeCreateAccount(1);
+  }
+
+  // Issue #422 — one-click copy-to-clipboard for the claim link.
+  async function handleCopyClaimUrl() {
+    if (!claimUrl) return;
+    try {
+      await navigator.clipboard.writeText(claimUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context) — no-op; the
+      // link is still visible and selectable for manual copying.
+    }
   }
 
   function handleRetry() {
@@ -245,6 +263,30 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           <p className="mt-2 text-xs text-green-700 dark:text-green-400">
             Account creation was authorised with Freighter client-side signing.
           </p>
+        )}
+
+        {/* Issue #422 — the claim link, shown in full with a one-click copy
+            button and its absolute claim-by deadline, so the sender doesn't
+            have to rely on relative "7 days" phrasing alone when sharing it. */}
+        {claimUrl && (
+          <div className="rounded-lg border border-green-200 bg-white p-3 dark:border-green-800 dark:bg-slate-900">
+            <p className="text-xs font-medium text-green-800 dark:text-green-300">Claim link</p>
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <code className="flex-1 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                {claimUrl}
+              </code>
+              <button
+                type="button"
+                onClick={handleCopyClaimUrl}
+                className="shrink-0 rounded-md bg-slate-900 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+              >
+                {linkCopied ? 'Copied!' : 'Copy link'}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-green-700 dark:text-green-400">
+              Expires: {formatAbsoluteExpiry(successAt, state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)}
+            </p>
+          </div>
         )}
 
         {claimUrl && (
@@ -507,4 +549,19 @@ function formatExpiryLabel(seconds: number): string {
   if (days === 7) return '7 days';
   if (days === 30) return '30 days';
   return `${days} days`;
+}
+
+/**
+ * Issue #422 — absolute claim-by deadline, computed from the moment the
+ * account was created plus its expiry window. Falls back to a relative-only
+ * description if the creation timestamp isn't available yet.
+ */
+function formatAbsoluteExpiry(createdAtMs: number | null, expiresInSeconds: number): string {
+  if (createdAtMs === null) return `in ${formatExpiryLabel(expiresInSeconds)}`;
+  const deadline = new Date(createdAtMs + expiresInSeconds * 1000);
+  const formatted = deadline.toLocaleString('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  return `${formatted} (in ${formatExpiryLabel(expiresInSeconds)})`;
 }

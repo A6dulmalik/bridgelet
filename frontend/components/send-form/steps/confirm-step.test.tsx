@@ -98,3 +98,39 @@ describe('ConfirmStep — issue #421 pending/loading states', () => {
     );
   });
 });
+
+describe('ConfirmStep — issue #422 success screen with shareable claim link', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    createEphemeralAccount.mockImplementation(
+      () =>
+        new Promise((resolve, reject) => {
+          createAccountResolve = resolve;
+          createAccountReject = reject;
+        }),
+    );
+  });
+
+  it('shows the full claim URL, a working copy button, and an absolute expiry deadline', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+    createAccountResolve(SUCCESS_ACCOUNT);
+
+    await waitFor(() => expect(screen.getByText(/payment sent/i)).toBeInTheDocument());
+
+    expect(screen.getByText(SUCCESS_ACCOUNT.claimUrl)).toBeInTheDocument();
+
+    const copyButton = screen.getByRole('button', { name: /copy link/i });
+    await user.click(copyButton);
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(SUCCESS_ACCOUNT.claimUrl);
+    await waitFor(() => expect(screen.getByRole('button', { name: /copied/i })).toBeInTheDocument());
+
+    // "Expires: <absolute date> (in 7 days)" — asserting the relative portion
+    // is present alongside the rendered date confirms both pieces show together.
+    expect(screen.getByText(/expires:.*\(in 7 days\)/i)).toBeInTheDocument();
+  });
+});
