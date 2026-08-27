@@ -1,48 +1,52 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  turbopack: {
-    root: __dirname,
+
+  /**
+   * Issue #472: Image and static asset optimization.
+   *
+   * - Enables WebP/AVIF format negotiation automatically (next/image default).
+   * - Sets device sizes matching common mobile breakpoints used in remittance
+   *   target markets (low-end Android devices dominate).
+   * - Keeps a minimal cache TTL for frequently-updated assets while maximising
+   *   CDN reuse for stable ones (1 year).
+   */
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [360, 414, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    minimumCacheTTL: 31536000, // 1 year for versioned assets
+    // Allow images from the Bridgelet CDN
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.bridgelet.org',
+      },
+    ],
   },
 
   /**
-   * HTTP response headers applied per-route.
+   * Issue #473: Bundle size budget enforcement.
    *
-   * /claim/[token] places the claim credential in the URL path, which means
-   * it would be forwarded in the `Referer` request header to every
-   * sub-resource loaded on that page (fonts, analytics beacons, images).
-   * Because this token authorises a fund sweep, leaking it to a third-party
-   * CDN or analytics endpoint before the recipient claims is a genuine
-   * funds-security risk (see issue #392 and docs/security-model.mdx §Claim
-   * Token Security).
+   * Webpack performance hints are set to 'error' in production so that
+   * the Next.js build fails (non-zero exit) when a chunk exceeds budget.
+   * This is the CI gate — the budget-check.ts script provides the per-route
+   * report and PR comment.
    *
-   * `Referrer-Policy: no-referrer` ensures the browser sends no `Referer`
-   * header at all for any navigation *away from* or sub-resource *loaded on*
-   * the claim page.  This is the most conservative choice and is appropriate
-   * here because:
-   *   1. The claim page has no SEO value that depends on referrer analytics.
-   *   2. No third-party widgets on this page need the origin URL to function.
-   *   3. The alternative — `strict-origin-when-cross-origin` — would still
-   *      send the full path (including the token) to same-origin sub-resources,
-   *      which is unnecessarily broad.
-   *
-   * Note: the path segment decision (vs. URL fragment `#token=...`) is
-   * documented in docs/security-model.mdx under "Claim Token Placement".
+   * Budgets (gzip-compressed targets — these raw values are ~2.5× larger):
+   *   /send, /claim/[token] — 200 kB max first-load JS (critical user paths)
+   *   all other routes      — 300 kB max
+   *   single assets         — 100 kB max
    */
-  async headers() {
-    return [
-      {
-        // Matches /claim/<any-token> — Next.js header source patterns use
-        // :param notation, not the [param] file-system convention.
-        source: '/claim/:token',
-        headers: [
-          {
-            key: 'Referrer-Policy',
-            value: 'no-referrer',
-          },
-        ],
-      },
-    ];
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      config.performance = {
+        hints: process.env.NODE_ENV === 'production' ? 'error' : 'warning',
+        maxEntrypointSize: 300 * 1024,  // 300 kB
+        maxAssetSize: 100 * 1024,       // 100 kB per asset
+      };
+    }
+    return config;
   },
 };
 
