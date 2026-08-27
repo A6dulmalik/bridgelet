@@ -1,46 +1,89 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 export interface QRCodeProps {
   value: string;
   size?: number;
   className?: string;
+  /** Issue #448 — Optional label for screen readers */
+  label?: string;
+  /** Issue #448 — Show download button */
+  showDownload?: boolean;
+  /** Issue #448 — Error correction level: L, M, Q, H */
+  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
 }
 
 /**
- * Pure client-side SVG QR code generator.
+ * Issue #448 — Pure client-side SVG QR code generator.
  * Encodes input value locally into SVG matrix without making ANY network requests.
+ *
+ * Enhanced to be a reusable, accessible component with download support.
  */
-export function QRCode({ value, size = 180, className = '' }: QRCodeProps) {
-  // Simple, deterministic 21x21 grid pattern generator for local SVG rendering
+export function QRCode({
+  value,
+  size = 180,
+  className = '',
+  label,
+  showDownload = false,
+}: QRCodeProps) {
   const grid = generateLocalMatrix(value);
   const cellSize = size / grid.length;
+  const ariaLabel = label ?? `QR Code for ${value}`;
+
+  const handleDownload = useCallback(() => {
+    const svgEl = document.querySelector<SVGElement>(`[data-qr-value="${CSS.escape(value)}"]`);
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qr-code-${value.slice(0, 16)}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [value]);
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={`rounded-lg bg-white p-2 shadow-inner ${className}`}
-      aria-label={`Client-side QR Code for ${value}`}
-      role="img"
-    >
-      {grid.map((row, r) =>
-        row.map((cell, c) =>
-          cell ? (
-            <rect
-              key={`${r}-${c}`}
-              x={c * cellSize}
-              y={r * cellSize}
-              width={cellSize + 0.1}
-              height={cellSize + 0.1}
-              fill="#0F172A"
-            />
-          ) : null
-        )
+    <div className={`inline-flex flex-col items-center gap-2 ${className}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="rounded-lg bg-white p-2 shadow-inner"
+        aria-label={ariaLabel}
+        role="img"
+        data-qr-value={value}
+      >
+        {grid.map((row, r) =>
+          row.map((cell, c) =>
+            cell ? (
+              <rect
+                key={`${r}-${c}`}
+                x={c * cellSize}
+                y={r * cellSize}
+                width={cellSize + 0.1}
+                height={cellSize + 0.1}
+                fill="#0F172A"
+              />
+            ) : null
+          )
+        )}
+      </svg>
+      {showDownload && (
+        <button
+          onClick={handleDownload}
+          type="button"
+          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          aria-label={`Download QR code for ${value}`}
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download
+        </button>
       )}
-    </svg>
+    </div>
   );
 }
 
