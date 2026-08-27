@@ -11,6 +11,11 @@
  *   cd e2e
  *   npx playwright test
  *
+ * ## Running a single browser engine locally
+ *
+ *   npx playwright test --project=firefox
+ *   npx playwright test --project=mobile-safari
+ *
  * ## Running against a real bridgelet-sdk instance
  *
  *   E2E_API_BASE_URL=http://localhost:3001 \
@@ -47,8 +52,10 @@ export default defineConfig({
   retries: process.env['CI'] ? 2 : 0,
 
   /**
-   * GitHub Actions reporter annotates the PR check directly;
-   * the list reporter is easier to read in a local terminal.
+   * GitHub Actions reporter annotates the PR check directly, and includes
+   * the project (browser) name in each annotation — this is what gives us
+   * per-engine failure attribution in the CI output. The list reporter is
+   * easier to read in a local terminal.
    */
   reporter: process.env['CI'] ? 'github' : 'list',
 
@@ -91,13 +98,39 @@ export default defineConfig({
   },
 
   /**
-   * Only run Chromium in CI to keep the scheduled job fast.
-   * Add more projects locally if cross-browser coverage is needed.
+   * Cross-browser + mobile-viewport matrix.
+   *
+   * Desktop engines cover the three major rendering engines (Chromium,
+   * Gecko, WebKit). The mobile projects emulate real device viewports,
+   * touch input, and UA strings — claim links are frequently opened from
+   * SMS/mail apps on a phone, so a desktop-viewport-only pass would miss
+   * layout and touch-target regressions on that path.
+   *
+   * Each project name is what CI's matrix strategy passes to
+   * `--project=<name>`, and what shows up in the GitHub Actions job name
+   * and Playwright's `--reporter=github` annotations — so a failure is
+   * always attributed to a specific engine/device, not just "e2e failed".
    */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'mobile-safari',
+      use: { ...devices['iPhone 14'] },
     },
   ],
 
