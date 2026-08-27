@@ -47,17 +47,25 @@ const STEPS: Step[] = [
   },
 ];
 
-export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
+export function HowItWorks({ intervalMs = 4000 }: { intervalMs?: number }) {
   const [activeStep, setActiveStep] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const nextStep = useCallback(() => {
     setActiveStep((prev) => (prev + 1) % STEPS.length);
   }, []);
 
   useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(nextStep, intervalMs);
     return () => clearInterval(timer);
-  }, [nextStep, intervalMs]);
+  }, [nextStep, intervalMs, isPaused]);
+
+  const handleStepClick = useCallback((index: number) => {
+    setActiveStep(index);
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 8000);
+  }, []);
 
   return (
     <section aria-labelledby="how-it-works-heading" className="py-10">
@@ -83,13 +91,21 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
               role="listitem"
               aria-label={step.ariaLabel}
               aria-current={isActive ? 'step' : undefined}
+              tabIndex={0}
+              onClick={() => handleStepClick(index)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleStepClick(index);
+                }
+              }}
               className={`relative flex flex-col items-center rounded-xl border p-6 text-center transition-all duration-500 ${
                 isActive
-                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse dark:bg-slate-800'
+                  ? 'border-sky-500 bg-white shadow-lg animate-step-pulse dark:bg-slate-800 scale-[1.02]'
                   : isPast
                     ? 'border-sky-200 bg-white dark:border-sky-800 dark:bg-slate-800'
                     : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
-              }`}
+              } cursor-pointer hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500`}
             >
               <div
                 className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-500 ${
@@ -128,6 +144,39 @@ export function HowItWorks({ intervalMs = 3000 }: { intervalMs?: number }) {
       </div>
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {STEPS[activeStep]?.title ?? ''}
+      </div>
+
+      <div className="mt-8 flex items-center justify-center gap-3" role="group" aria-label="Step navigation">
+        {STEPS.map((step, index) => (
+          <button
+            key={step.number}
+            onClick={() => handleStepClick(index)}
+            aria-label={`Go to step ${step.number}: ${step.title}`}
+            aria-current={index === activeStep ? 'step' : undefined}
+            className={`h-2.5 rounded-full transition-all duration-300 ${
+              index === activeStep
+                ? 'w-8 bg-sky-600'
+                : index < activeStep
+                  ? 'w-2.5 bg-sky-300'
+                  : 'w-2.5 bg-slate-300 dark:bg-slate-600'
+            }`}
+          />
+        ))}
+        <button
+          onClick={() => setIsPaused(!isPaused)}
+          aria-label={isPaused ? 'Resume auto-play' : 'Pause auto-play'}
+          className="ml-2 rounded-md p-1 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-300"
+        >
+          {isPaused ? (
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+          )}
+        </button>
       </div>
     </section>
   );
