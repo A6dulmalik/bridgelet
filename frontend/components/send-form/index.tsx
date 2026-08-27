@@ -120,7 +120,9 @@ export function SendForm() {
           publicKey={formState.publicKey}
           onConnected={(key) => {
             updateState({ publicKey: key });
-            goNext();
+            // Only advance when a real key was provided; an empty string means
+            // the user disconnected their wallet (persisted state cleared).
+            if (key) goNext();
           }}
         />
       )}
