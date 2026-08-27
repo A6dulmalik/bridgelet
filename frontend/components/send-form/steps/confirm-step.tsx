@@ -66,6 +66,16 @@ interface FeeDisplay {
   capacityUsage: number;
 }
 
+/**
+ * Issue #421 — after this many milliseconds spent in the 'submitting'
+ * phase, we start describing the wait as "pending confirmation" instead
+ * of "submitting", since the create-account request has almost certainly
+ * left the browser and is now waiting on Stellar network confirmation.
+ */
+const PENDING_CONFIRMATION_AFTER_MS = 4_000;
+/** After this long, reassure the sender the app hasn't frozen. */
+const SLOW_NOTICE_AFTER_MS = 12_000;
+
 export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [submitPhase, setSubmitPhase] = useState<SubmitPhase>('idle');
   const [signingModeUsed, setSigningModeUsed] = useState<'freighter-client' | 'backend' | null>(
@@ -76,6 +86,31 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
+
+  // Issue #421 — pending/timeout UI state. `pendingConfirmation` flips the
+  // "submitting" phase's copy over to a "waiting for network confirmation"
+  // framing once enough time has passed that this is the more accurate
+  // description; `showSlowNotice` reassures the sender that a long wait
+  // isn't a frozen page.
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
+  const [showSlowNotice, setShowSlowNotice] = useState(false);
+
+  useEffect(() => {
+    if (submitPhase !== 'submitting') {
+      setPendingConfirmation(false);
+      setShowSlowNotice(false);
+      return;
+    }
+    const pendingTimer = setTimeout(
+      () => setPendingConfirmation(true),
+      PENDING_CONFIRMATION_AFTER_MS,
+    );
+    const slowTimer = setTimeout(() => setShowSlowNotice(true), SLOW_NOTICE_AFTER_MS);
+    return () => {
+      clearTimeout(pendingTimer);
+      clearTimeout(slowTimer);
+    };
+  }, [submitPhase]);
 
   // Fee estimation state
   const [feeDisplay, setFeeDisplay] = useState<FeeDisplay | null>(null);
@@ -178,7 +213,8 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   function submittingLabel(): string {
     if (submitPhase === 'awaiting-freighter') return 'Waiting for Freighter…';
     if (submitPhase === 'preparing') return 'Preparing transaction…';
-    return 'Sending…';
+    if (submitPhase === 'submitting' && pendingConfirmation) return 'Pending confirmation…';
+    return 'Submitting…';
   }
 
   if (submitPhase === 'success') {
@@ -350,6 +386,43 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           )}
         </div>
       </div>
+
+      {/* Issue #421 — distinct visual state for the submitting / pending-confirmation
+          gap between "Confirm & Send" and the success screen, so the sender can
+          tell the app is actively working rather than frozen. */}
+      {submitting && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950"
+        >
+          <svg
+            className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-blue-600 dark:text-blue-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-300">{submittingLabel()}</p>
+            <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">
+              {submitPhase === 'awaiting-freighter'
+                ? 'Approve the request in your Freighter wallet extension.'
+                : pendingConfirmation
+                  ? 'Your transaction has been submitted and is waiting for confirmation on the Stellar network.'
+                  : "Please don't close this window."}
+            </p>
+            {showSlowNotice && (
+              <p className="mt-2 text-xs text-blue-700 dark:text-blue-400" role="alert">
+                This is taking longer than usual. Your funds have not left your wallet unless
+                confirmation completes — hang tight a little longer, or check back shortly.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {errorInfo && (
         <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
