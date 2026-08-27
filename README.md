@@ -61,7 +61,7 @@ Comprehensive documentation is available in the [`/docs`](./docs) directory:
 | [🔒 Security Model](https://github.com/bridgelet-org/bridgelet/raw/main/docs/security-model.pdf)       | Security considerations and threat model         |
 | [🚀 Getting Started](https://github.com/bridgelet-org/bridgelet/raw/main/docs/getting-started.pdf)     | Quick start guide for developers                 |
 | [🔧 Integration Guide](https://github.com/bridgelet-org/bridgelet/raw/main/docs/integration-guide.pdf) | Step-by-step integration instructions            |
-| [💡 Use Cases & Examples](https://github.com/bridgelet-org/bridgelet/raw/main/docs/use-cases.pdf)      | Real-world use cases and examples                |
+| [💡 Use Cases & Examples](./docs/use-cases.md)                                                         | Real-world use cases with runnable code samples |
 | [📋 MVP Specification](https://github.com/bridgelet-org/bridgelet/raw/main/docs/mvp-specification.pdf) | Minimum viable product requirements              |
 | [🧪 Testing Guide](./TESTING.md)                                                                       | Testing strategy, Lighthouse CI, and guidelines  |
 | [🔗 Compatibility Matrix](./docs/compatibility.md)                                                     | Which frontend releases are verified against which bridgelet-sdk / bridgelet-core versions |
