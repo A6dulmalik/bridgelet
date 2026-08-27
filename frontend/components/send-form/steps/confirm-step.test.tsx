@@ -21,11 +21,18 @@ vi.mock('@/lib/xlm-price', () => ({
 }));
 
 // Always take the "backend" signing path — Freighter client-side signing is
-// exercised elsewhere; this file focuses on issue #421's pending/loading states.
+// exercised elsewhere; this file focuses on the pending/success/QR states.
 vi.mock('@/lib/freighter-sender-signing', () => ({
   tryFreighterSenderSigning: vi.fn().mockResolvedValue({ mode: 'backend', reason: 'test' }),
   toCreateAccountRequestWithFreighterSignature: vi.fn(),
   FreighterSenderSigningError: class extends Error {},
+}));
+
+// Issue #423 — the QR code's own rendering (real vs. mocked encoding) is
+// covered by claim-qr-code.test.tsx; here we only assert it receives the
+// claim URL.
+vi.mock('../claim-qr-code', () => ({
+  ClaimQrCode: ({ value }: { value: string }) => <div data-testid="claim-qr-code">{value}</div>,
 }));
 
 let createAccountResolve: (value: unknown) => void;
@@ -132,5 +139,29 @@ describe('ConfirmStep — issue #422 success screen with shareable claim link', 
     // "Expires: <absolute date> (in 7 days)" — asserting the relative portion
     // is present alongside the rendered date confirms both pieces show together.
     expect(screen.getByText(/expires:.*\(in 7 days\)/i)).toBeInTheDocument();
+  });
+});
+
+describe('ConfirmStep — issue #423 QR code for the claim link', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    createEphemeralAccount.mockImplementation(
+      () =>
+        new Promise((resolve, reject) => {
+          createAccountResolve = resolve;
+          createAccountReject = reject;
+        }),
+    );
+  });
+
+  it('renders a QR code encoding the exact claim URL on success', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+    createAccountResolve(SUCCESS_ACCOUNT);
+
+    await waitFor(() => expect(screen.getByText(/payment sent/i)).toBeInTheDocument());
+    expect(screen.getByTestId('claim-qr-code')).toHaveTextContent(SUCCESS_ACCOUNT.claimUrl);
   });
 });

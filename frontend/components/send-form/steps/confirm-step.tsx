@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { SendFormState } from '../index';
+import { ClaimQrCode } from '../claim-qr-code';
 import { useNfc } from '@/hooks/use-nfc';
 import { BridgeletClient, RateLimitError } from '@/lib/api/client';
 import { createEphemeralAccount, type EphemeralAccount } from '@/lib/bridgelet';
@@ -286,6 +287,13 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
             <p className="mt-2 text-xs text-green-700 dark:text-green-400">
               Expires: {formatAbsoluteExpiry(successAt, state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS)}
             </p>
+          </div>
+        )}
+
+        {/* Issue #423 — scannable QR code for in-person or SMS-limited sharing. */}
+        {claimUrl && (
+          <div className="flex justify-center pt-1">
+            <ClaimQrCode value={claimUrl} size={160} />
           </div>
         )}
 
