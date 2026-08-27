@@ -10,7 +10,10 @@
     "build": "npm --prefix frontend run build",
     "test": "echo \"Run npm test inside frontend/ for app tests\" && exit 0",
     "check:compatibility": "node scripts/check-compatibility-doc.mjs",
-    "check:sdk-contract": "node scripts/check-sdk-contract.mjs"
+    "check:sdk-contract": "node scripts/check-sdk-contract.mjs",
+    "changelog": "release-it --changelog",
+    "release": "release-it",
+    "release:dry-run": "release-it --dry-run"
   },
   "repository": {
     "type": "git",
@@ -25,6 +28,10 @@
   "homepage": "https://github.com/okekefrancis112/bridgelet#readme",
   "dependencies": {
     "puppeteer": "^24.36.0"
+  },
+  "devDependencies": {
+    "@release-it/conventional-changelog": "^12.0.0",
+    "release-it": "^21.0.2"
   },
   "bridgeletCompatibility": {
     "description": "Pinned bridgelet-sdk/bridgelet-core versions this repo is verified against. See compatibility.json (source of truth) and docs/compatibility.md (matrix + process).",
