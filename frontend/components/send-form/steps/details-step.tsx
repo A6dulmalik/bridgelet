@@ -9,6 +9,18 @@ const SUPPORTED_ASSETS = ['XLM', 'USDC'] as const;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Issue #420 — Stellar's smallest indivisible unit is 1 stroop
+ * (10_000_000 stroops = 1 XLM/asset unit), so no amount below this can
+ * ever be represented on-chain, and no amount can carry more than 7
+ * decimal places without silently losing precision.
+ */
+const MIN_AMOUNT = 0.0000001;
+// Fixed-point form of MIN_AMOUNT for error messages — `${MIN_AMOUNT}` would
+// otherwise interpolate as "1e-7", which is confusing outside a console.
+const MIN_AMOUNT_LABEL = MIN_AMOUNT.toFixed(7);
+const MAX_DECIMAL_PLACES = 7;
+
 type FieldErrors = {
   recipientEmail?: string;
   amountXlm?: string;
@@ -22,11 +34,18 @@ export function validateDetails(state: SendFormState): FieldErrors {
     errors.recipientEmail = 'Enter a valid email address, or leave the field empty.';
   }
 
-  const amount = Number(state.amountXlm);
-  if (state.amountXlm.trim() === '' || Number.isNaN(amount)) {
+  const trimmedAmount = state.amountXlm.trim();
+  const amount = Number(trimmedAmount);
+  const [, decimals] = trimmedAmount.split('.');
+
+  if (trimmedAmount === '' || Number.isNaN(amount)) {
     errors.amountXlm = 'Enter an amount.';
   } else if (amount <= 0) {
     errors.amountXlm = 'Amount must be greater than 0.';
+  } else if (amount < MIN_AMOUNT) {
+    errors.amountXlm = `Amount is below the minimum of ${MIN_AMOUNT_LABEL} ${state.assetCode || 'units'}.`;
+  } else if (decimals && decimals.length > MAX_DECIMAL_PLACES) {
+    errors.amountXlm = `Amount cannot have more than ${MAX_DECIMAL_PLACES} decimal places.`;
   }
 
   if (!SUPPORTED_ASSETS.includes(state.assetCode as (typeof SUPPORTED_ASSETS)[number])) {
