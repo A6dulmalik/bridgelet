@@ -80,6 +80,61 @@ function mockCreateAccount(value: any) {
   createAccountImpl = () => Promise.resolve(value);
 }
 
+describe('ConfirmStep — success screen (Issue #422)', () => {
+  beforeEach(() => {
+    mockCreateAccount(SUCCESS_ACCOUNT);
+    prepareImpl = () => Promise.resolve({ unsignedTxXdr: 'AAAA_UNSIGNED' });
+  });
+
+  it('displays the full claim URL prominently after a successful send', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/payment sent/i));
+
+    const link = screen.getByRole('link', { name: SUCCESS_ACCOUNT.claimUrl });
+    expect(link).toHaveAttribute('href', SUCCESS_ACCOUNT.claimUrl);
+  });
+
+  it('offers a one-click copy button for the claim link', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/payment sent/i));
+
+    // Defined after userEvent.setup(), which installs its own clipboard stub
+    // on navigator.clipboard — ours must win so writeText is observable.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+
+    await user.click(
+      screen.getByRole('button', { name: new RegExp(`copy: ${SUCCESS_ACCOUNT.claimUrl}`, 'i') }),
+    );
+
+    expect(writeText).toHaveBeenCalledWith(SUCCESS_ACCOUNT.claimUrl);
+    expect(await screen.findByText(/copied!/i)).toBeInTheDocument();
+  });
+
+  it('shows the claim link expiration deadline for recipient awareness', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/payment sent/i));
+
+    const expiry = screen.getByTestId('claim-link-expiry');
+    expect(expiry).toHaveTextContent(/expires on/i);
+    // The formatted deadline should reflect the year from the server-reported expiresAt.
+    expect(expiry).toHaveTextContent('2026');
+  });
+});
+
 describe('ConfirmStep — pending/loading states (Issue #421)', () => {
   it('shows a distinct pending panel and disables Confirm while submitting', async () => {
     let resolveCreate!: (v: unknown) => void;

@@ -19,6 +19,7 @@ import {
 } from '@/lib/account-errors';
 import { publicEnv } from '@/lib/env';
 import { isValidStellarAddress } from '@/lib/validation/stellar-address';
+import { CopyToClipboard } from '@/components/copy-to-clipboard';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -102,6 +103,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const { isSupported, writeUrl, isWriting, error: nfcError } = useNfc();
 
   // Issue #421 — pending/confirming state timers
@@ -222,6 +224,7 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
       clearPendingTimers();
       setShowSlowWarning(false);
       setClaimUrl(account.claimUrl);
+      setExpiresAt(account.expiresAt ?? null);
       setSubmitPhase('success');
     } catch (err) {
       clearPendingTimers();
@@ -258,12 +261,18 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
   if (submitPhase === 'success') {
     const claimLink = claimUrl || (typeof window !== 'undefined' ? `${window.location.origin}/claim` : 'https://bridgelet.org/claim');
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Here is your payment claim link via Bridgelet: ${claimLink}`)}`;
+    // Issue #422 — prefer the server-reported expiry (`account.expiresAt`)
+    // for the deadline shown to the sender; fall back to a client-computed
+    // one from the chosen expiry window if the API didn't return it.
+    const deadlineLabel = formatExpiryDeadline(
+      expiresAt ?? new Date(Date.now() + (state.expiresIn || DEFAULT_EXPIRES_IN_SECONDS) * 1000).toISOString(),
+    );
 
     return (
       <div
         role="status"
         aria-live="polite"
-        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 space-y-3 dark:border-green-800 dark:bg-green-950"
+        className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 space-y-4 dark:border-green-800 dark:bg-green-950"
       >
         <div>
           <p className="font-medium text-green-800 dark:text-green-300">Payment sent!</p>
@@ -280,9 +289,33 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
           </p>
         </div>
         {signingModeUsed === 'freighter-client' && (
-          <p className="mt-2 text-xs text-green-700 dark:text-green-400">
+          <p className="text-xs text-green-700 dark:text-green-400">
             Account creation was authorised with Freighter client-side signing.
           </p>
+        )}
+
+        {/* Issue #422 — dedicated success screen: claim link, copy, and expiry */}
+        {claimUrl && (
+          <div className="space-y-2 rounded-lg border border-green-300 bg-white p-3 dark:border-green-700 dark:bg-slate-900">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Claim link
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={claimUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 break-all font-mono text-sm text-slate-900 underline decoration-slate-300 underline-offset-2 hover:decoration-slate-500 dark:text-slate-100"
+              >
+                {claimUrl}
+              </a>
+              <CopyToClipboard value={claimUrl} label="Copy link" copiedLabel="Copied!" variant="button" />
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400" data-testid="claim-link-expiry">
+              This link expires on <strong>{deadlineLabel}</strong>. Funds are returned to your
+              wallet automatically if it isn&apos;t claimed by then.
+            </p>
+          </div>
         )}
 
         {claimUrl && (
@@ -554,4 +587,18 @@ function formatExpiryLabel(seconds: number): string {
   if (days === 7) return '7 days';
   if (days === 30) return '30 days';
   return `${days} days`;
+}
+
+/**
+ * Issue #422 — Formats an ISO timestamp as an absolute, human-readable
+ * deadline (e.g. "September 4, 2026 at 3:45 PM") so the sender knows
+ * exactly when the claim link stops working, not just a relative window.
+ */
+function formatExpiryDeadline(isoTimestamp: string): string {
+  const date = new Date(isoTimestamp);
+  if (Number.isNaN(date.getTime())) return 'an unknown date';
+  return date.toLocaleString('en-US', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
 }
