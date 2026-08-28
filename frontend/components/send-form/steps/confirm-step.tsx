@@ -20,6 +20,7 @@ import {
 import { publicEnv } from '@/lib/env';
 import { isValidStellarAddress } from '@/lib/validation/stellar-address';
 import { CopyToClipboard } from '@/components/copy-to-clipboard';
+import { QRCodeModalButton } from '@/components/qr-code';
 
 /**
  * Default claim window for accounts created from the send form.
@@ -315,6 +316,12 @@ export function ConfirmStep({ state, onBack }: ConfirmStepProps) {
               This link expires on <strong>{deadlineLabel}</strong>. Funds are returned to your
               wallet automatically if it isn&apos;t claimed by then.
             </p>
+          </div>
+        )}
+
+        {claimUrl && (
+          <div>
+            <QRCodeModalButton claimUrl={claimUrl} />
           </div>
         )}
 

@@ -135,6 +135,28 @@ describe('ConfirmStep — success screen (Issue #422)', () => {
   });
 });
 
+describe('ConfirmStep — QR code for claim link (Issue #423)', () => {
+  beforeEach(() => {
+    mockCreateAccount(SUCCESS_ACCOUNT);
+    prepareImpl = () => Promise.resolve({ unsignedTxXdr: 'AAAA_UNSIGNED' });
+  });
+
+  it('reveals a scannable QR code for the claim link on demand', async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ConfirmStep state={STATE} onBack={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /confirm & send/i }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/payment sent/i));
+
+    expect(screen.queryByRole('img', { name: new RegExp(SUCCESS_ACCOUNT.claimUrl) })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /show qr code/i }));
+
+    const qr = screen.getByRole('img', { name: new RegExp(SUCCESS_ACCOUNT.claimUrl) });
+    expect(qr.tagName.toLowerCase()).toBe('svg');
+  });
+});
+
 describe('ConfirmStep — pending/loading states (Issue #421)', () => {
   it('shows a distinct pending panel and disables Confirm while submitting', async () => {
     let resolveCreate!: (v: unknown) => void;
